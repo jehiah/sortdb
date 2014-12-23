@@ -47,11 +47,15 @@ func (db *DB) Close() {
 	db.f = nil
 }
 
-func (db *DB) Reopen(f *os.File) {
+func (db *DB) Reload(f *os.File) error {
 	db.Lock()
 	db.Close()
-	db.Open(f)
+	err := db.Open(f)
 	db.Unlock()
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // LastIndexByte returns the index of the first instance of c in s, or -1 if c is not present in s after start.
