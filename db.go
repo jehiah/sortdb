@@ -78,12 +78,10 @@ func IndexByte(s []byte, i, m int, c byte) int {
 	return -1
 }
 
-// Search uses a binary search looking for needle based
-func (db *DB) Search(needle []byte) ([]byte, bool) {
+// Search uses a binary search looking for needle, and returns the full match line
+func (db *DB) Search(needle []byte) []byte {
 	db.RLock()
 
-	// the key we want is bounded by newline and the record separator
-	needle = append(needle, db.recordSep)
 	needleLen := len(needle)
 
 	// binary search to find the index that matches our needle (starting at the previous line)
@@ -104,14 +102,14 @@ func (db *DB) Search(needle []byte) ([]byte, bool) {
 	})
 	if i < 0 || i == db.size {
 		db.RUnlock()
-		return nil, false
+		return nil
 	}
 	previous := LastIndexByte(db.data, i, db.lineEnding)
 	lineEnd := IndexByte(db.data, previous+1, db.size, db.lineEnding)
 	// intentionally make a copy of data
-	value := []byte(db.data[previous+1+needleLen : lineEnd])
+	line := []byte(db.data[previous+1 : lineEnd])
 	db.RUnlock()
-	return value, true
+	return line
 
 	// re-check equals?
 	// if i+needleLen < db.size && bytes.Equal(db.data[i:i+needleLen], needle) {
