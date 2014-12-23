@@ -27,5 +27,6 @@ func main() {
 		log.Fatalf("error mapping %s", err)
 	}
 	end := bytes.Index(data, []byte("\n"))
-	println(string([]byte(data[:end])))
+	record := []byte(data[:end])
+	log.Printf("record is %q", record)
 }
