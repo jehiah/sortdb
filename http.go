@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -30,8 +31,8 @@ func (s *httpServer) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	// 	s.fwmatchHandler(w, req)
 	// case "/stats":
 	// 	s.statsHandler(w, req)
-	// case "/reload":
-	// 	s.reloadHandler(w, req)
+	case "/reload":
+		s.reloadHandler(w, req)
 	// case "/exit":
 	// 	s.exitHandler(w, req)
 	default:
@@ -59,6 +60,13 @@ func (s *httpServer) getHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "text/plain")
+	w.Header().Set("Content-Length", fmt.Sprintf("%d", len(line)+1))
 	w.Write(line)
 	w.Write([]byte{s.ctx.db.lineEnding})
+}
+
+func (s *httpServer) reloadHandler(w http.ResponseWriter, req *http.Request) {
+	s.ctx.reloadChan <- 1
+	w.Header().Set("Content-Length", "2")
+	io.WriteString(w, "OK")
 }

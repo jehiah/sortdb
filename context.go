@@ -14,6 +14,7 @@ type Context struct {
 	httpAddr      *net.TCPAddr
 	httpListener  net.Listener
 	notifications chan int
+	reloadChan    chan int
 	waitGroup     util.WaitGroupWrapper
 }
 
@@ -25,4 +26,20 @@ func verifyAddress(arg string, address string) *net.TCPAddr {
 	}
 
 	return addr
+}
+
+func (c *Context) ReloadLoop() {
+	for {
+		<-c.reloadChan
+		log.Printf("reoloading %q", c.filename)
+		f, err := os.Open(c.filename)
+		if err != nil {
+			log.Fatalf("error opening %q %s", c.filename, err)
+		}
+		err = c.db.Reload(f)
+		if err != nil {
+			log.Fatalf("failed realoding file %q %s", c.filename, err)
+		}
+	}
+
 }

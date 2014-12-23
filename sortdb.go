@@ -38,6 +38,7 @@ func main() {
 		db:            db,
 		httpAddr:      verifyAddress("http-address", *httpAddress),
 		notifications: make(chan int),
+		reloadChan:    make(chan int),
 	}
 
 	hupChan := make(chan os.Signal, 1)
@@ -45,16 +46,10 @@ func main() {
 	go func() {
 		for {
 			<-hupChan
-			f, err := os.Open(*file)
-			if err != nil {
-				log.Fatalf("error opening %q %s", *file, err)
-			}
-			err = db.Reload(f)
-			if err != nil {
-				log.Fatalf("failed realoding file %q %s", *file, err)
-			}
+			ctx.reloadChan <- 1
 		}
 	}()
+	go ctx.ReloadLoop()
 
 	httpListener, err := net.Listen("tcp", ctx.httpAddr.String())
 	if err != nil {
