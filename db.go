@@ -98,7 +98,7 @@ func (db *DB) Search(needle []byte) ([]byte, bool) {
 		}
 		return bytes.Compare(db.data[previous+1:previous+1+needleLen], needle) >= 0
 	})
-	if i < 0 {
+	if i < 0 || i == db.size {
 		db.RUnlock()
 		return nil, false
 	}
