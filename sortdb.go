@@ -2,22 +2,29 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"net"
 	"os"
 	"os/signal"
+	"runtime"
 	"syscall"
 
 	"github.com/jehiah/sortdb/util"
 )
 
 func main() {
-	// showVersion := flag.Bool("version", false, "print version string")
+	showVersion := flag.Bool("version", false, "print version string")
 	file := flag.String("db-file", "", "db file")
 	httpAddress := flag.String("http-address", ":8080", "http address to listen on")
 	fieldSeparator := flag.String("field-separator", "\t", "field separator (eg: comma, tab, pipe)")
 
 	flag.Parse()
+
+	if *showVersion {
+		fmt.Printf("sortdb v%s (built w/%s)\n", VERSION, runtime.Version())
+		return
+	}
 
 	if len(*fieldSeparator) != 1 {
 		log.Fatalf("Error: invalid field separator %q", *fieldSeparator)
