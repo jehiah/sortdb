@@ -25,8 +25,8 @@ func (s *httpServer) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		s.pingHandler(w, req)
 	case "/get":
 		s.getHandler(w, req)
-	// case "/mgetHandler":
-	// 	s.mgetHandler(w, req)
+	case "/mget":
+		s.mgetHandler(w, req)
 	// case "/fwmatch":
 	// 	s.fwmatchHandler(w, req)
 	// case "/stats":
@@ -63,6 +63,29 @@ func (s *httpServer) getHandler(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-Length", fmt.Sprintf("%d", len(line)+1))
 	w.Write(line)
 	w.Write([]byte{s.ctx.db.lineEnding})
+}
+
+func (s *httpServer) mgetHandler(w http.ResponseWriter, req *http.Request) {
+	req.ParseForm()
+	if len(req.Form["key"]) == 0 {
+		http.Error(w, "MISSING_ARG_KEY", 400)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/plain")
+	var numFound int
+	for _, key := range req.Form["key"] {
+		needle := append([]byte(key), s.ctx.db.recordSep)
+		line := s.ctx.db.Search(needle)
+		if len(line) != 0 {
+			numFound += 1
+			w.Write(line)
+			w.Write([]byte{s.ctx.db.lineEnding})
+		}
+	}
+	if numFound == 0 {
+		w.WriteHeader(200)
+	}
 }
 
 func (s *httpServer) reloadHandler(w http.ResponseWriter, req *http.Request) {

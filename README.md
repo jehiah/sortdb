@@ -17,7 +17,7 @@ API endpoints:
 
  * `/get?key=...`
     
- * `/mget?k=&k=...` *(not implemented yet)*
+ * `/mget?key=&key=...`
 
  * `/stats` *(not implemented yet)*
  
@@ -29,4 +29,4 @@ a HUP signal will also cause sortdb to reload/remap the db file
 
 --
 
-Sortdb was originally developed by [@jayridge](https://twitter.com/jayridge) as part of the [simplehttp project](https://github.com/bitly/simplehttp/tree/master/sortdb) and was ported to Go by [Jehiah Czebotar](https://jehiah.cz/)
+Sortdb was originally developed by [@jayridge](https://github.com/jayridge) as part of the [simplehttp project](https://github.com/bitly/simplehttp/tree/master/sortdb) and was ported to Go by [Jehiah Czebotar](https://jehiah.cz/)

@@ -92,22 +92,29 @@ func (db *DB) Search(needle []byte) []byte {
 		// find previous line starting point
 		previous := LastIndexByte(db.data, i, db.lineEnding)
 		if previous == -1 {
-			return false
+			previous = 0
+		} else {
+			previous++ // eat the line ending
 		}
 		// make sure we have space before end of the buffer
 		if previous+1+needleLen > db.size {
 			return false
 		}
-		return bytes.Compare(db.data[previous+1:previous+1+needleLen], needle) >= 0
+		return bytes.Compare(db.data[previous:previous+needleLen], needle) >= 0
 	})
 	if i < 0 || i == db.size {
 		db.RUnlock()
 		return nil
 	}
 	previous := LastIndexByte(db.data, i, db.lineEnding)
-	lineEnd := IndexByte(db.data, previous+1, db.size, db.lineEnding)
+	if previous == -1 {
+		previous = 0
+	} else {
+		previous++ // eat the line ending
+	}
+	lineEnd := IndexByte(db.data, previous, db.size, db.lineEnding)
 	// intentionally make a copy of data
-	line := []byte(db.data[previous+1 : lineEnd])
+	line := []byte(db.data[previous:lineEnd])
 	db.RUnlock()
 	return line
 
