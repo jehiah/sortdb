@@ -116,13 +116,9 @@ func (db *DB) Search(needle []byte) []byte {
 	// intentionally make a copy of data
 	line := []byte(db.data[previous:lineEnd])
 	db.RUnlock()
-	return line
 
-	// re-check equals?
-	// if i+needleLen < db.size && bytes.Equal(db.data[i:i+needleLen], needle) {
-	// 	previous := LastIndexByte(db.data, i, '\n')
-	// 	lineEnd := IndexByte(db.data, i, db.size, '\n')
-	// 	return []byte(db.data[i:lineEnd]), true
-	// }
-	// return nil, false
+	if bytes.Equal(line[:len(needle)], needle) {
+		return line
+	}
+	return nil
 }
