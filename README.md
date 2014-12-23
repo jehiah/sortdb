@@ -3,10 +3,13 @@ sortdb
 
 Sortdb makes a sorted tab (tsv) or comma (csv) delimitated sorted file accessible via HTTP.
 
+[![Build Status](https://secure.travis-ci.org/jehiah/sortdb.svg?branch=master)](http://travis-ci.org/jehiah/sortdb)
+
+
     Usage of ./sortdb:
       -db-file="": db file
       -field-separator="\t": field separator (eg: comma, tab, pipe)
-      -http-address=":8080": http addres to listen on
+      -http-address=":8080": http address to listen on
 
 API endpoints:
 
@@ -18,9 +21,9 @@ API endpoints:
 
  * `/stats` *(not implemented yet)*
  
- * `/reload` (reload/remap the db file)
+ * `/reload` reload/remap the db file
  
- * `/exit` (cause the current process to exit)
+ * `/exit` cause the current process to exit
 
 a HUP signal will also cause sortdb to reload/remap the db file
 

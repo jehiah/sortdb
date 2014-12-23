@@ -14,7 +14,7 @@ import (
 func main() {
 	// showVersion := flag.Bool("version", false, "print version string")
 	file := flag.String("db-file", "", "db file")
-	httpAddress := flag.String("http-address", ":8080", "http addres to listen on")
+	httpAddress := flag.String("http-address", ":8080", "http address to listen on")
 	fieldSeparator := flag.String("field-separator", "\t", "field separator (eg: comma, tab, pipe)")
 
 	flag.Parse()
