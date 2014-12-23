@@ -22,7 +22,7 @@ func main() {
 	}
 
 	for _, q := range []string{"prefix.1", "e", "a", "aa", "zzzzzzzzzzzzzzzzzzzzzzzzzz"} {
-		f, ok := db.Search([]byte(q), '\n', '\t')
+		f, ok := db.Search([]byte(q))
 		log.Printf("search %q found %q %v", q, f, ok)
 	}
 	db.Close()

@@ -14,10 +14,13 @@ type DB struct {
 	f    *os.File
 	data mmap.Mmap
 	size int
+
+	recordSep  byte
+	lineEnding byte
 }
 
 func NewDB(f *os.File) (*DB, error) {
-	db := &DB{}
+	db := &DB{recordSep: '\t', lineEnding: '\n'}
 	err := db.Open(f)
 	return db, err
 }
@@ -72,14 +75,20 @@ func IndexByte(s []byte, i, m int, c byte) int {
 }
 
 // Search uses a binary search looking for needle based
-func (db *DB) Search(needle []byte, newline, recordSep byte) ([]byte, bool) {
-	// Binary search to find a matching byte slice.
-	needle = append(needle, recordSep)
+func (db *DB) Search(needle []byte) ([]byte, bool) {
+	db.RLock()
 
+	// the key we want is bounded by newline and the record separator
+	needle = append(needle, db.recordSep)
 	needleLen := len(needle)
+
+	// binary search to find the index that matches our needle (starting at the previous line)
+	// note: this could be more efficient if we wrote our own search as we could skip data we've checked
+	// isntead of checking potentially more indexes here. Because page sizes is 4k this should hopefully
+	// matter less
 	i := sort.Search(db.size, func(i int) bool {
 		// find previous line starting point
-		previous := LastIndexByte(db.data, i, newline)
+		previous := LastIndexByte(db.data, i, db.lineEnding)
 		if previous == -1 {
 			return false
 		}
@@ -90,11 +99,15 @@ func (db *DB) Search(needle []byte, newline, recordSep byte) ([]byte, bool) {
 		return bytes.Compare(db.data[previous+1:previous+1+needleLen], needle) >= 0
 	})
 	if i < 0 {
+		db.RUnlock()
 		return nil, false
 	}
-	previous := LastIndexByte(db.data, i, newline)
-	lineEnd := IndexByte(db.data, previous+1, db.size, newline)
-	return []byte(db.data[previous+1+needleLen : lineEnd]), true
+	previous := LastIndexByte(db.data, i, db.lineEnding)
+	lineEnd := IndexByte(db.data, previous+1, db.size, db.lineEnding)
+	// intentionally make a copy of data
+	value := []byte(db.data[previous+1+needleLen : lineEnd])
+	db.RUnlock()
+	return value, true
 
 	// re-check equals?
 	// if i+needleLen < db.size && bytes.Equal(db.data[i:i+needleLen], needle) {
