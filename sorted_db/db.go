@@ -1,4 +1,4 @@
-package main
+package sorted_db
 
 import (
 	"bytes"
@@ -15,17 +15,24 @@ type DB struct {
 	data mmap.Mmap
 	size int
 
-	recordSep  byte
-	lineEnding byte
+	RecordSeparator byte
+	LineEnding      byte
 }
 
-func NewDB(f *os.File) (*DB, error) {
-	db := &DB{recordSep: '\t', lineEnding: '\n'}
+// Create a new DB structure Opened against the specified file
+func New(f *os.File) (*DB, error) {
+	db := &DB{RecordSeparator: '\t', LineEnding: '\n'}
 	err := db.Open(f)
 	return db, err
 }
 
+// Open the DB against a backing file
 func (db *DB) Open(f *os.File) error {
+	db.Lock()
+	defer db.Unlock()
+	if db.f != nil {
+		panic("DB already open")
+	}
 	fi, err := f.Stat()
 	if err != nil {
 		return err
@@ -41,17 +48,24 @@ func (db *DB) Open(f *os.File) error {
 	return nil
 }
 
+// Close and unmap the existing DB backing file
 func (db *DB) Close() {
-	db.data.Unmap()
-	db.f.Close()
-	db.f = nil
+	db.Lock()
+	defer db.Unlock()
+	if db.data != nil {
+		db.data.Unmap()
+		db.data = nil
+	}
+	if db.f != nil {
+		db.f.Close()
+		db.f = nil
+	}
 }
 
+// Reload DB maped to a new backing file
 func (db *DB) Reload(f *os.File) error {
-	db.Lock()
 	db.Close()
 	err := db.Open(f)
-	db.Unlock()
 	if err != nil {
 		return err
 	}
@@ -59,7 +73,7 @@ func (db *DB) Reload(f *os.File) error {
 }
 
 // LastIndexByte returns the index of the first instance of c in s, or -1 if c is not present in s after start.
-func LastIndexByte(s []byte, i int, c byte) int {
+func lastIndexByte(s []byte, i int, c byte) int {
 	for ; i >= 0; i-- {
 		if s[i] == c {
 			return i
@@ -69,7 +83,7 @@ func LastIndexByte(s []byte, i int, c byte) int {
 }
 
 // IndexByte returns the index of the first instance of c in s after i but before m. If c is not present in s -1 is returned
-func IndexByte(s []byte, i, m int, c byte) int {
+func indexByte(s []byte, i, m int, c byte) int {
 	for ; i < m; i++ {
 		if s[i] == c {
 			return i
@@ -78,7 +92,8 @@ func IndexByte(s []byte, i, m int, c byte) int {
 	return -1
 }
 
-// Search uses a binary search looking for needle, and returns the full match line
+// Search uses a binary search looking for needle, and returns the full match line.
+// the needle should already have the record separator appended
 func (db *DB) Search(needle []byte) []byte {
 	db.RLock()
 
@@ -90,7 +105,7 @@ func (db *DB) Search(needle []byte) []byte {
 	// matter less
 	i := sort.Search(db.size, func(i int) bool {
 		// find previous line starting point
-		previous := LastIndexByte(db.data, i, db.lineEnding)
+		previous := lastIndexByte(db.data, i, db.LineEnding)
 		if previous == -1 {
 			previous = 0
 		} else {
@@ -106,13 +121,13 @@ func (db *DB) Search(needle []byte) []byte {
 		db.RUnlock()
 		return nil
 	}
-	previous := LastIndexByte(db.data, i, db.lineEnding)
+	previous := lastIndexByte(db.data, i, db.LineEnding)
 	if previous == -1 {
 		previous = 0
 	} else {
 		previous++ // eat the line ending
 	}
-	lineEnd := IndexByte(db.data, previous, db.size, db.lineEnding)
+	lineEnd := indexByte(db.data, previous, db.size, db.LineEnding)
 	// intentionally make a copy of data
 	line := []byte(db.data[previous:lineEnd])
 	db.RUnlock()

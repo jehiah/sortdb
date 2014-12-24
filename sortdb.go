@@ -10,6 +10,7 @@ import (
 	"runtime"
 	"syscall"
 
+	"github.com/jehiah/sortdb/sorted_db"
 	"github.com/jehiah/sortdb/util"
 )
 
@@ -34,11 +35,11 @@ func main() {
 	if err != nil {
 		log.Fatalf("error opening %q %s", *file, err)
 	}
-	db, err := NewDB(f)
+	db, err := sorted_db.New(f)
 	if err != nil {
 		log.Fatalf("error mapping %s", err)
 	}
-	db.recordSep = []byte(*fieldSeparator)[0]
+	db.RecordSeparator = []byte(*fieldSeparator)[0]
 
 	ctx := &Context{
 		filename:      *file,

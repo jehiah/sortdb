@@ -1,4 +1,4 @@
-package main
+package sorted_db
 
 import (
 	"testing"
@@ -17,7 +17,7 @@ func TestLastIndexByte(t *testing.T) {
 		testCase{5, 'b', 1},
 		testCase{3, 'e', -1},
 	} {
-		i := LastIndexByte(b, tc.startIndex, tc.needle)
+		i := lastIndexByte(b, tc.startIndex, tc.needle)
 		if i != tc.expected {
 			t.Errorf("got %d expected %d searching for %q in %q", i, tc.expected, tc.needle, b)
 		}

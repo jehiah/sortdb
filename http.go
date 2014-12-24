@@ -62,7 +62,7 @@ func (s *httpServer) getHandler(w http.ResponseWriter, req *http.Request) {
 	}
 	atomic.AddUint64(&s.Requests, 1)
 	atomic.AddUint64(&s.GetRequests, 1)
-	needle := append([]byte(key), s.ctx.db.recordSep)
+	needle := append([]byte(key), s.ctx.db.RecordSeparator)
 	line := s.ctx.db.Search(needle)
 
 	if len(line) == 0 {
@@ -74,7 +74,7 @@ func (s *httpServer) getHandler(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-Type", "text/plain")
 	w.Header().Set("Content-Length", strconv.Itoa(len(line)+1))
 	w.Write(line)
-	w.Write([]byte{s.ctx.db.lineEnding})
+	w.Write([]byte{s.ctx.db.LineEnding})
 }
 
 func (s *httpServer) mgetHandler(w http.ResponseWriter, req *http.Request) {
@@ -89,12 +89,12 @@ func (s *httpServer) mgetHandler(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-Type", "text/plain")
 	var numFound int
 	for _, key := range req.Form["key"] {
-		needle := append([]byte(key), s.ctx.db.recordSep)
+		needle := append([]byte(key), s.ctx.db.RecordSeparator)
 		line := s.ctx.db.Search(needle)
 		if len(line) != 0 {
 			numFound += 1
 			w.Write(line)
-			w.Write([]byte{s.ctx.db.lineEnding})
+			w.Write([]byte{s.ctx.db.LineEnding})
 		}
 	}
 	if numFound == 0 {
