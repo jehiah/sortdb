@@ -18,7 +18,7 @@ func TestMetrics(t *testing.T) {
 	if stats.Avg != time.Duration(9)*time.Second {
 		t.Errorf("avg is %s expected 9s", stats.Avg)
 	}
-	if stats.p99 != time.Duration(11)*time.Second {
-		t.Errorf("99th is %s expected 11s", stats.p99)
+	if stats.P99 != time.Duration(11)*time.Second {
+		t.Errorf("99th is %s expected 11s", stats.P99)
 	}
 }
