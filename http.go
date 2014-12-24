@@ -126,6 +126,7 @@ func (s *httpServer) reloadHandler(w http.ResponseWriter, req *http.Request) {
 
 type statsResponse struct {
 	Requests     uint64        `json:"total_requests"`
+	SeekCount    uint64        `json:"total_seeks"`
 	GetRequests  uint64        `json:"get_requests"`
 	GetHits      uint64        `json:"get_hits"`
 	GetMisses    uint64        `json:"get_misses"`
@@ -145,6 +146,7 @@ func (s *httpServer) statsHandler(w http.ResponseWriter, req *http.Request) {
 	mgetStats := s.MgetMetrics.Stats()
 	stats := statsResponse{
 		Requests:     atomic.LoadUint64(&s.Requests),
+		SeekCount:    s.ctx.db.SeekCount(),
 		GetRequests:  atomic.LoadUint64(&s.GetRequests),
 		GetHits:      atomic.LoadUint64(&s.GetHits),
 		GetMisses:    atomic.LoadUint64(&s.GetMisses),

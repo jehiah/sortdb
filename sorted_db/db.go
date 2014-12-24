@@ -5,15 +5,17 @@ import (
 	"os"
 	"sort"
 	"sync"
+	"sync/atomic"
 
 	"github.com/riobard/go-mmap"
 )
 
 type DB struct {
 	sync.RWMutex
-	f    *os.File
-	data mmap.Mmap
-	size int
+	f         *os.File
+	data      mmap.Mmap
+	seekCount uint64
+	size      int
 
 	RecordSeparator byte
 	LineEnding      byte
@@ -105,6 +107,7 @@ func (db *DB) Search(needle []byte) []byte {
 	// matter less
 	i := sort.Search(db.size, func(i int) bool {
 		// find previous line starting point
+		atomic.AddUint64(&db.seekCount, 1)
 		previous := lastIndexByte(db.data, i, db.LineEnding)
 		if previous == -1 {
 			previous = 0
@@ -136,4 +139,8 @@ func (db *DB) Search(needle []byte) []byte {
 		return line
 	}
 	return nil
+}
+
+func (db *DB) SeekCount() uint64 {
+	return atomic.LoadUint64(&db.seekCount)
 }
