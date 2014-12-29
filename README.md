@@ -8,6 +8,7 @@ Sortdb makes a sorted tab (tsv) or comma (csv) delimitated file accessible via H
 
     Usage of ./sortdb:
       -db-file="": db file
+      -enable-logging=false: request logging
       -field-separator="\t": field separator (eg: comma, tab, pipe)
       -http-address=":8080": http address to listen on
       -version=false: print version string

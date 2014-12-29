@@ -5,6 +5,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 	"sync/atomic"
 	"time"
@@ -27,12 +28,16 @@ type httpServer struct {
 	MgetMetrics *timer_metrics.TimerMetrics
 }
 
-func NewHTTPServer(ctx *Context) *httpServer {
-	return &httpServer{
+func NewHTTPServer(ctx *Context, logging bool) http.Handler {
+	h := &httpServer{
 		ctx:         ctx,
 		GetMetrics:  timer_metrics.NewTimerMetrics(1500, "/get"),
 		MgetMetrics: timer_metrics.NewTimerMetrics(1500, "/mget"),
 	}
+	if logging {
+		return LoggingHandler(os.Stdout, h)
+	}
+	return h
 }
 
 func (s *httpServer) ServeHTTP(w http.ResponseWriter, req *http.Request) {

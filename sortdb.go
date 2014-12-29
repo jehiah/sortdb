@@ -19,6 +19,7 @@ func main() {
 	file := flag.String("db-file", "", "db file")
 	httpAddress := flag.String("http-address", ":8080", "http address to listen on")
 	fieldSeparator := flag.String("field-separator", "\t", "field separator (eg: comma, tab, pipe)")
+	requestLogging := flag.Bool("enable-logging", false, "request logging")
 
 	flag.Parse()
 
@@ -64,7 +65,7 @@ func main() {
 		log.Fatalf("FATAL: listen (%s) failed - %s", ctx.httpAddr, err)
 	}
 	ctx.httpListener = httpListener
-	httpServer := NewHTTPServer(ctx)
+	httpServer := NewHTTPServer(ctx, *requestLogging)
 
 	exitChan := make(chan int)
 	signalChan := make(chan os.Signal, 1)
