@@ -27,19 +27,19 @@ Records are matched by the first data column.
 
 ```json
 {
-  "mget_99": 0,
-  "mget_95": 0,
-  "mget_average_request": 0,
-  "mget_misses": 0,
-  "mget_hits": 0,
   "total_requests": 3,
+  "mget_requests": 0,
+  "mget_hits": 0,
+  "mget_misses": 0,
+  "mget_average_request": 0,
+  "mget_95": 0,
+  "mget_99": 0,
   "get_requests": 3,
   "get_hits": 3,
   "get_misses": 0,
   "get_average_request": 448,
   "get_95": 1323,
-  "get_99": 1323,
-  "mget?_requests": 0
+  "get_99": 1323
 }
 ```
  
