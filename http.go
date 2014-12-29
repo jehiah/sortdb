@@ -24,15 +24,17 @@ type httpServer struct {
 	MgetHits     uint64
 	MgetMisses   uint64
 
-	GetMetrics  *timer_metrics.TimerMetrics
-	MgetMetrics *timer_metrics.TimerMetrics
+	GlobalMetrics *timer_metrics.TimerMetrics
+	GetMetrics    *timer_metrics.TimerMetrics
+	MgetMetrics   *timer_metrics.TimerMetrics
 }
 
 func NewHTTPServer(ctx *Context, logging bool) http.Handler {
 	h := &httpServer{
-		ctx:         ctx,
-		GetMetrics:  timer_metrics.NewTimerMetrics(1500, "/get"),
-		MgetMetrics: timer_metrics.NewTimerMetrics(1500, "/mget"),
+		ctx:           ctx,
+		GlobalMetrics: timer_metrics.NewTimerMetrics(1500, "All Requests"),
+		GetMetrics:    timer_metrics.NewTimerMetrics(1500, "/get"),
+		MgetMetrics:   timer_metrics.NewTimerMetrics(1500, "/mget"),
 	}
 	if logging {
 		return LoggingHandler(os.Stdout, h)
@@ -92,6 +94,7 @@ func (s *httpServer) getHandler(w http.ResponseWriter, req *http.Request) {
 		w.Write(line)
 		w.Write([]byte{s.ctx.db.LineEnding})
 	}
+	s.GlobalMetrics.Status(startTime)
 	s.GetMetrics.Status(startTime)
 }
 
@@ -122,6 +125,7 @@ func (s *httpServer) mgetHandler(w http.ResponseWriter, req *http.Request) {
 	} else {
 		atomic.AddUint64(&s.MgetHits, 1)
 	}
+	s.GlobalMetrics.Status(startTime)
 	s.MgetMetrics.Status(startTime)
 }
 
@@ -133,6 +137,9 @@ func (s *httpServer) reloadHandler(w http.ResponseWriter, req *http.Request) {
 
 type statsResponse struct {
 	Requests     uint64        `json:"total_requests"`
+	ReqAvg       time.Duration `json:"average_request"` // Microsecond
+	Req95        time.Duration `json:"request_99"`      // Microsecond
+	Req99        time.Duration `json:"request_95"`      // Microsecond
 	SeekCount    uint64        `json:"total_seeks"`
 	GetRequests  uint64        `json:"get_requests"`
 	GetHits      uint64        `json:"get_hits"`
@@ -149,10 +156,14 @@ type statsResponse struct {
 }
 
 func (s *httpServer) statsHandler(w http.ResponseWriter, req *http.Request) {
+	globalStats := s.GlobalMetrics.Stats()
 	getStats := s.GetMetrics.Stats()
 	mgetStats := s.MgetMetrics.Stats()
 	stats := statsResponse{
 		Requests:     atomic.LoadUint64(&s.Requests),
+		ReqAvg:       globalStats.Avg / time.Microsecond,
+		Req95:        globalStats.P95 / time.Microsecond,
+		Req99:        globalStats.P99 / time.Microsecond,
 		SeekCount:    s.ctx.db.SeekCount(),
 		GetRequests:  atomic.LoadUint64(&s.GetRequests),
 		GetHits:      atomic.LoadUint64(&s.GetHits),
