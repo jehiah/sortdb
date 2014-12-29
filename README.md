@@ -46,6 +46,8 @@ Records are matched by the first data column.
  * `/reload` reload/remap the db file
  
  * `/exit` cause the current process to exit
+ 
+ * `/debug/pprof` the [net/http/pprof](http://golang.org/pkg/net/http/pprof/) debugging endpoints
 
 a HUP signal will also cause sortdb to reload/remap the db file
 
