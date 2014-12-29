@@ -18,9 +18,9 @@ Records are matched by the first data column.
 
  * `/ping`  responsds with 200 `OK`
 
- * `/get?key=...` Response is `text/plain` with the full record that matched, or a 404 if no match.
+ * `/get?key=...` Response is `text/plain` with the full record that matched (excluding the key), or a 404 if no match.
     
- * `/mget?key=&key=...` Response is `text/plain` with all records that match, or an empty 200 if no matches
+ * `/mget?key=...&key=...` Response is `text/plain` with all records that match (including the key), or an empty 200 if no matches
 
  * `/stats` Response is `application/json` with the following payload
 

@@ -79,6 +79,8 @@ func (s *httpServer) getHandler(w http.ResponseWriter, req *http.Request) {
 		atomic.AddUint64(&s.GetMisses, 1)
 		http.Error(w, "NOT_FOUND", 404)
 	} else {
+		// we only output the 'value'
+		line = line[len(needle):]
 		atomic.AddUint64(&s.GetHits, 1)
 		w.Header().Set("Content-Type", "text/plain")
 		w.Header().Set("Content-Length", strconv.Itoa(len(line)+1))
