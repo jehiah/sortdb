@@ -10,13 +10,11 @@ import (
 )
 
 type Context struct {
-	filename      string
-	db            *sorted_db.DB
-	httpAddr      *net.TCPAddr
-	httpListener  net.Listener
-	notifications chan int
-	reloadChan    chan int
-	waitGroup     util.WaitGroupWrapper
+	db           *sorted_db.DB
+	httpAddr     *net.TCPAddr
+	httpListener net.Listener
+	reloadChan   chan int
+	waitGroup    util.WaitGroupWrapper
 }
 
 func verifyAddress(arg string, address string) *net.TCPAddr {
@@ -32,14 +30,9 @@ func verifyAddress(arg string, address string) *net.TCPAddr {
 func (c *Context) ReloadLoop() {
 	for {
 		<-c.reloadChan
-		log.Printf("reoloading %q", c.filename)
-		f, err := os.Open(c.filename)
+		err := c.db.Remap()
 		if err != nil {
-			log.Fatalf("error opening %q %s", c.filename, err)
-		}
-		err = c.db.Reload(f)
-		if err != nil {
-			log.Fatalf("failed realoding file %q %s", c.filename, err)
+			log.Fatalf("ERROR remapping DB %q", err)
 		}
 	}
 

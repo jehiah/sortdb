@@ -34,20 +34,18 @@ func main() {
 
 	f, err := os.Open(*file)
 	if err != nil {
-		log.Fatalf("error opening %q %s", *file, err)
+		log.Fatalf("ERROR opening %q %s", *file, err)
 	}
 	db, err := sorted_db.New(f)
 	if err != nil {
-		log.Fatalf("error mapping %s", err)
+		log.Fatalf("ERROR creating db %s", err)
 	}
 	db.RecordSeparator = []byte(*fieldSeparator)[0]
 
 	ctx := &Context{
-		filename:      *file,
-		db:            db,
-		httpAddr:      verifyAddress("http-address", *httpAddress),
-		notifications: make(chan int),
-		reloadChan:    make(chan int),
+		db:         db,
+		httpAddr:   verifyAddress("http-address", *httpAddress),
+		reloadChan: make(chan int),
 	}
 
 	hupChan := make(chan os.Signal, 1)
@@ -83,7 +81,6 @@ func main() {
 	<-exitChan
 
 	ctx.httpListener.Close()
-	close(ctx.notifications)
 	db.Close()
 	ctx.waitGroup.Wait()
 }

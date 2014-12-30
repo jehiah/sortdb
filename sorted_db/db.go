@@ -2,6 +2,8 @@ package sorted_db
 
 import (
 	"bytes"
+	"fmt"
+	"log"
 	"os"
 	"sort"
 	"sync"
@@ -23,7 +25,7 @@ type DB struct {
 
 // Create a new DB structure Opened against the specified file
 func New(f *os.File) (*DB, error) {
-	db := &DB{RecordSeparator: '\t', LineEnding: '\n'}
+	db := &DB{RecordSeparator: '\t', LineEnding: '\n', size: -1}
 	err := db.Open(f)
 	return db, err
 }
@@ -33,13 +35,17 @@ func (db *DB) Open(f *os.File) error {
 	db.Lock()
 	defer db.Unlock()
 	if db.f != nil {
-		panic("DB already open")
+		db.close()
 	}
 	fi, err := f.Stat()
 	if err != nil {
 		return err
 	}
 	size := int(fi.Size())
+	if size <= 0 {
+		return fmt.Errorf("invalid files size %d (must be non-zero)", size)
+	}
+	log.Printf("DB Mmap %d bytes %s", size, f.Name())
 	data, err := mmap.Map(f, 0, size, mmap.PROT_READ, mmap.MAP_FILE|mmap.MAP_SHARED)
 	if err != nil {
 		return err
@@ -54,20 +60,44 @@ func (db *DB) Open(f *os.File) error {
 func (db *DB) Close() {
 	db.Lock()
 	defer db.Unlock()
+	db.close()
+}
+
+// close and unmap DB w/o locking
+func (db *DB) close() {
 	if db.data != nil {
+		var name string
+		if db.f != nil {
+			name = db.f.Name()
+		}
+		log.Printf("DB Unmmap %d bytes %s", db.size, name)
 		db.data.Unmap()
 		db.data = nil
 	}
 	if db.f != nil {
+		log.Printf("Closing file %s", db.f.Name())
 		db.f.Close()
 		db.f = nil
 	}
+	db.size = -1
 }
 
-// Reload DB maped to a new backing file
-func (db *DB) Reload(f *os.File) error {
-	db.Close()
-	err := db.Open(f)
+// Remap DB to the same backing file
+func (db *DB) Remap() error {
+	db.RLock()
+	if db.f != nil {
+		db.RUnlock()
+		return fmt.Errorf("DB not open to reload")
+	}
+	filename := db.f.Name()
+	db.RUnlock()
+
+	log.Printf("DB Remapping %s", filename)
+	f, err := os.Open(filename)
+	if err != nil {
+		return err
+	}
+	err = db.Open(f)
 	if err != nil {
 		return err
 	}
@@ -101,6 +131,9 @@ func (db *DB) Search(needle []byte) []byte {
 
 	needleLen := len(needle)
 
+	if db.size <= 0 {
+		panic("DB not Mapped")
+	}
 	// binary search to find the index that matches our needle (starting at the previous line)
 	// note: this could be more efficient if we wrote our own search as we could skip data we've checked
 	// isntead of checking potentially more indexes here. Because page sizes is 4k this should hopefully
