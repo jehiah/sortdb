@@ -85,9 +85,9 @@ func (db *DB) close() {
 // Remap DB to the same backing file
 func (db *DB) Remap() error {
 	db.RLock()
-	if db.f != nil {
+	if db.f == nil {
 		db.RUnlock()
-		return fmt.Errorf("DB not open to reload")
+		return fmt.Errorf("DB must be open to remap")
 	}
 	filename := db.f.Name()
 	db.RUnlock()
