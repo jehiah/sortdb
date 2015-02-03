@@ -11,7 +11,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/jehiah/sortdb/timer_metrics"
+	"github.com/bitly/timer_metrics"
 )
 
 type httpServer struct {
