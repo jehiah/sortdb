@@ -165,11 +165,14 @@ type statsResponse struct {
 	MgetAvg      time.Duration `json:"mget_average_request"` // Microsecond
 	Mget95       time.Duration `json:"mget_95"`              // Microsecond
 	Mget99       time.Duration `json:"mget_99"`              // Microsecond
+	DBSize       int64         `json:"db_size"`
+	DBMtime      int64         `json:"db_mtime"`
 }
 
 func (s *httpServer) statsHandler(w http.ResponseWriter, req *http.Request) {
 	getStats := s.GetMetrics.Stats()
 	mgetStats := s.MgetMetrics.Stats()
+	size, mtime := s.ctx.db.Info()
 	stats := statsResponse{
 		Requests:     atomic.LoadUint64(&s.Requests),
 		SeekCount:    s.ctx.db.SeekCount(),
@@ -185,6 +188,8 @@ func (s *httpServer) statsHandler(w http.ResponseWriter, req *http.Request) {
 		MgetAvg:      mgetStats.Avg / time.Microsecond,
 		Mget95:       mgetStats.P95 / time.Microsecond,
 		Mget99:       mgetStats.P99 / time.Microsecond,
+		DBSize:       int64(size),
+		DBMtime:      mtime.Unix(),
 	}
 	// evbuffer_add_printf(evb, "\"total_seeks\": %"PRIu64",", total_seeks);
 

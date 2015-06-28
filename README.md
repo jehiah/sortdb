@@ -39,7 +39,9 @@ Records are matched by the first data column.
   "get_misses": 0,
   "get_average_request": 448,
   "get_95": 1323,
-  "get_99": 1323
+  "get_99": 1323,
+  "db_size": 767557632,
+  "db_mtime": 1435463934
 }
 ```
  

@@ -8,6 +8,7 @@ import (
 	"sort"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"github.com/riobard/go-mmap"
 )
@@ -28,6 +29,17 @@ func New(f *os.File) (*DB, error) {
 	db := &DB{RecordSeparator: '\t', LineEnding: '\n', size: -1}
 	err := db.Open(f)
 	return db, err
+}
+
+// Info returns the mmaped backing file size and modification time
+func (db *DB) Info() (int, time.Time) {
+	db.RLock()
+	defer db.RUnlock()
+	if db.f == nil {
+		return 0, time.Time{}
+	}
+	fi, _ := db.f.Stat()
+	return db.size, fi.ModTime()
 }
 
 // Open the DB against a backing file
