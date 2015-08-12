@@ -125,8 +125,7 @@ func (db *DB) beginningOfLine(i int) int {
 }
 
 // lastIndexByte returns the index of the first instance of c in s before i. If
-// c is not present in s,or -1 if c is not present in s before i, then -1 is
-// returned.
+// c is not present in s, or -1 if c is not present in s before i.
 func lastIndexByte(s []byte, i int, c byte) int {
 	for ; i >= 0; i-- {
 		if s[i] == c {
@@ -189,8 +188,8 @@ func (db *DB) findStartOfRange(startNeedle []byte) int {
 	})
 }
 
-// findStartOfRange finds the first record that is lexically greater than
-// startNeedle.
+// findEndOfRange finds the first record that is lexically greater than
+// endNeedle.
 // In other words, it finds the first record beyond the range ended by
 // endNeedle.
 func (db *DB) findEndOfRange(endNeedle []byte) int {
