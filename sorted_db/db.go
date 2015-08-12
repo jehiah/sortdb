@@ -139,10 +139,10 @@ func indexByte(s []byte, i, m int, c byte) int {
 	return -1
 }
 
-// findFirstRecordAfterMatch performs a binary search to find the first record
-// after needle prefix matches. If includeExactMatch is set, returns the first
-// record that exactly matches, if it exists.
-func (db *DB) findFirstRecordAfterMatch(needle []byte, includeExactMatch bool) int {
+// findFirstMatch performs a binary search to find the first record
+// that matches needle using the given isMatch function, or -1 if
+// no match is found.
+func (db *DB) findFirstMatch(needle []byte, isMatch func([]byte, []byte) bool) int {
 	needleLen := len(needle)
 
 	// binary search to find the index that matches our needle,
@@ -165,12 +165,27 @@ func (db *DB) findFirstRecordAfterMatch(needle []byte, includeExactMatch bool) i
 		}
 		endOfKey := indexByte(db.data, previous, db.size, db.RecordSeparator)
 
-		comparison := bytes.Compare(db.data[previous:endOfKey], needle)
-		if comparison == 0 {
-			return includeExactMatch
-		}
+		return isMatch(db.data[previous:endOfKey], needle)
+	})
+}
 
-		return comparison > 0
+// findStartOfRange finds the first record that is lexically equal to or
+// greater than startNeedle.
+// In other words, it finds the first record in the range started by
+// startNeedle.
+func (db *DB) findStartOfRange(startNeedle []byte) int {
+	return db.findFirstMatch(startNeedle, func(a []byte, b []byte) bool {
+		return bytes.Compare(a, b) >= 0
+	})
+}
+
+// findStartOfRange finds the first record that is lexically greater than
+// startNeedle.
+// In other words, it finds the first record beyond the range ended by
+// endNeedle.
+func (db *DB) findEndOfRange(endNeedle []byte) int {
+	return db.findFirstMatch(endNeedle, func(a []byte, b []byte) bool {
+		return bytes.Compare(a, b) > 0
 	})
 }
 
@@ -182,7 +197,7 @@ func (db *DB) Search(needle []byte) []byte {
 	if db.size <= 0 {
 		panic("DB not Mapped")
 	}
-	i := db.findFirstRecordAfterMatch(needle, true)
+	i := db.findStartOfRange(needle)
 	if i < 0 || i == db.size {
 		db.RUnlock()
 		return nil
@@ -214,7 +229,7 @@ func (db *DB) RangeMatch(startNeedle []byte, endNeedle []byte) []byte {
 	if db.size <= 0 {
 		panic("DB not Mapped")
 	}
-	startRecord := db.findFirstRecordAfterMatch(startNeedle, true)
+	startRecord := db.findStartOfRange(startNeedle)
 	if startRecord < 0 || startRecord == db.size {
 		db.RUnlock()
 		return nil
@@ -225,7 +240,7 @@ func (db *DB) RangeMatch(startNeedle []byte, endNeedle []byte) []byte {
 
 	endIndex := db.size
 	if endNeedle != nil {
-		endRecord := db.findFirstRecordAfterMatch(endNeedle, false)
+		endRecord := db.findEndOfRange(endNeedle)
 		if endRecord >= 0 && endRecord < db.size {
 			previous := lastIndexByte(db.data, endRecord, db.LineEnding)
 			// eat the line ending or (if there is no line ending) move to the start
