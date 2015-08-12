@@ -164,6 +164,12 @@ func (db *DB) findFirstMatch(needle []byte, isMatch func([]byte, []byte) bool) i
 			return false
 		}
 		endOfKey := indexByte(db.data, previous, db.size, db.RecordSeparator)
+		if endOfKey < 0 {
+			endOfKey = indexByte(db.data, previous, db.size, db.LineEnding)
+		}
+		if endOfKey < 0 {
+			endOfKey = db.size
+		}
 
 		return isMatch(db.data[previous:endOfKey], needle)
 	})
@@ -221,14 +227,20 @@ func (db *DB) Search(needle []byte) []byte {
 
 // RangeMatch uses binary searches to look for startNeedle and (if not nil)
 // endNeedle. Returns all full match lines that fall between startNeedle and
-// endNeedle, inclusive. startNeedle and endNeedle should already both end
-// with the record separator.
+// endNeedle, inclusive.
 func (db *DB) RangeMatch(startNeedle []byte, endNeedle []byte) []byte {
 	db.RLock()
 
 	if db.size <= 0 {
 		panic("DB not Mapped")
 	}
+
+	if endNeedle != nil && bytes.Compare(startNeedle, endNeedle) > 0 {
+		// end is smaller than start, so the range is ill-defined
+		db.RUnlock()
+		return nil
+	}
+
 	startRecord := db.findStartOfRange(startNeedle)
 	if startRecord < 0 || startRecord == db.size {
 		db.RUnlock()

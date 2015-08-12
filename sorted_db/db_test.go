@@ -149,6 +149,7 @@ func TestRangeMatch(t *testing.T) {
 c	d
 `},
 		{"0", "9", ""},
+		{"c", "b", ""},
 		{"p", "prefix.3", `prefix.1	how
 prefix.2	are
 prefix.3	you
