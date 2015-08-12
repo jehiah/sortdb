@@ -116,7 +116,9 @@ func (db *DB) Remap() error {
 	return nil
 }
 
-// LastIndexByte returns the index of the first instance of c in s, or -1 if c is not present in s after start.
+// lastIndexByte returns the index of the first instance of c in s before i. If
+// c is not present in s,or -1 if c is not present in s before i, then -1 is
+// returned.
 func lastIndexByte(s []byte, i int, c byte) int {
 	for ; i >= 0; i-- {
 		if s[i] == c {
@@ -126,7 +128,8 @@ func lastIndexByte(s []byte, i int, c byte) int {
 	return -1
 }
 
-// IndexByte returns the index of the first instance of c in s after i but before m. If c is not present in s -1 is returned
+// indexByte returns the index of the first instance of c in s after i but
+// before m. If c is not present in s between i and m, then -1 is returned.
 func indexByte(s []byte, i, m int, c byte) int {
 	for ; i < m; i++ {
 		if s[i] == c {
@@ -136,16 +139,17 @@ func indexByte(s []byte, i, m int, c byte) int {
 	return -1
 }
 
-// findFirstRecordAfterMatch performs a binary search to find the first record after
-// needle prefix matches. If includeExactMatch is set, returns the first record that exactly matches,
-// if it exists.
+// findFirstRecordAfterMatch performs a binary search to find the first record
+// after needle prefix matches. If includeExactMatch is set, returns the first
+// record that exactly matches, if it exists.
 func (db *DB) findFirstRecordAfterMatch(needle []byte, includeExactMatch bool) int {
 	needleLen := len(needle)
 
-	// binary search to find the index that matches our needle (starting at the previous line)
-	// note: this could be more efficient if we wrote our own search as we could skip data we've checked
-	// isntead of checking potentially more indexes here. Because page sizes is 4k this should hopefully
-	// matter less
+	// binary search to find the index that matches our needle,
+	// starting at the previous line.
+	// note: this could be more efficient if we wrote our own search as we could
+	// skip data we've checked instead of checking potentially more indexes here.
+	// Because page size is 4k this should hopefully matter less.
 	return sort.Search(db.size, func(i int) bool {
 		// find previous line starting point
 		atomic.AddUint64(&db.seekCount, 1)
@@ -171,7 +175,7 @@ func (db *DB) findFirstRecordAfterMatch(needle []byte, includeExactMatch bool) i
 }
 
 // Search uses a binary search looking for needle, and returns the full match line.
-// the needle should already have the record separator appended
+// needle should already end with the record separator.
 func (db *DB) Search(needle []byte) []byte {
 	db.RLock()
 
@@ -200,9 +204,10 @@ func (db *DB) Search(needle []byte) []byte {
 	return nil
 }
 
-// RangeMatch uses binary searches to look for startNeedle and (if not nil) endNeedle.
-// Returns all full match lines that fall between startNeedle and endNeedle, inclusive.
-// startNeedle and endNeedle should already have the record separator appended.
+// RangeMatch uses binary searches to look for startNeedle and (if not nil)
+// endNeedle. Returns all full match lines that fall between startNeedle and
+// endNeedle, inclusive. startNeedle and endNeedle should already both end
+// with the record separator.
 func (db *DB) RangeMatch(startNeedle []byte, endNeedle []byte) []byte {
 	db.RLock()
 
