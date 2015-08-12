@@ -136,21 +136,14 @@ func indexByte(s []byte, i, m int, c byte) int {
 	return -1
 }
 
-// Search uses a binary search looking for needle, and returns the full match line.
-// the needle should already have the record separator appended
-func (db *DB) Search(needle []byte) []byte {
-	db.RLock()
-
+func (db *DB) findFirstRecord(needle []byte) int {
 	needleLen := len(needle)
 
-	if db.size <= 0 {
-		panic("DB not Mapped")
-	}
 	// binary search to find the index that matches our needle (starting at the previous line)
 	// note: this could be more efficient if we wrote our own search as we could skip data we've checked
 	// isntead of checking potentially more indexes here. Because page sizes is 4k this should hopefully
 	// matter less
-	i := sort.Search(db.size, func(i int) bool {
+	return sort.Search(db.size, func(i int) bool {
 		// find previous line starting point
 		atomic.AddUint64(&db.seekCount, 1)
 		previous := lastIndexByte(db.data, i, db.LineEnding)
@@ -165,6 +158,17 @@ func (db *DB) Search(needle []byte) []byte {
 		}
 		return bytes.Compare(db.data[previous:previous+needleLen], needle) >= 0
 	})
+}
+
+// Search uses a binary search looking for needle, and returns the full match line.
+// the needle should already have the record separator appended
+func (db *DB) Search(needle []byte) []byte {
+	db.RLock()
+
+	if db.size <= 0 {
+		panic("DB not Mapped")
+	}
+	i := db.findFirstRecord(needle)
 	if i < 0 || i == db.size {
 		db.RUnlock()
 		return nil
