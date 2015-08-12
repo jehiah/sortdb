@@ -116,6 +116,14 @@ func (db *DB) Remap() error {
 	return nil
 }
 
+// beginningOfLine retrieves the beginning of the line that includes i
+// by searching for the last line separator occurrence before position.
+func (db *DB) beginningOfLine(i int) int {
+	// sets the index to the first non-line-ending byte (or to the
+	// beginning of the DB if no line ending is found)
+	return lastIndexByte(db.data, i, db.LineEnding) + 1
+}
+
 // lastIndexByte returns the index of the first instance of c in s before i. If
 // c is not present in s,or -1 if c is not present in s before i, then -1 is
 // returned.
@@ -153,12 +161,9 @@ func (db *DB) findFirstMatch(needle []byte, isMatch func([]byte, []byte) bool) i
 	return sort.Search(db.size, func(i int) bool {
 		// find previous line starting point
 		atomic.AddUint64(&db.seekCount, 1)
-		previous := lastIndexByte(db.data, i, db.LineEnding)
-		if previous == -1 {
-			previous = 0
-		} else {
-			previous++ // eat the line ending
-		}
+
+		previous := db.beginningOfLine(i)
+
 		// make sure we have space before end of the buffer
 		if previous+1+needleLen > db.size {
 			return false
@@ -208,12 +213,9 @@ func (db *DB) Search(needle []byte) []byte {
 		db.RUnlock()
 		return nil
 	}
-	previous := lastIndexByte(db.data, i, db.LineEnding)
-	if previous == -1 {
-		previous = 0
-	} else {
-		previous++ // eat the line ending
-	}
+
+	previous := db.beginningOfLine(i)
+
 	lineEnd := indexByte(db.data, previous, db.size, db.LineEnding)
 	// intentionally make a copy of data
 	line := []byte(db.data[previous:lineEnd])
@@ -246,17 +248,14 @@ func (db *DB) RangeMatch(startNeedle []byte, endNeedle []byte) []byte {
 		db.RUnlock()
 		return nil
 	}
-	previous := lastIndexByte(db.data, startRecord, db.LineEnding)
-	// eat the line ending or (if there is no line ending) move to the start
-	startIndex := previous + 1
+
+	startIndex := db.beginningOfLine(startRecord)
 
 	endIndex := db.size
 	if endNeedle != nil {
 		endRecord := db.findEndOfRange(endNeedle)
 		if endRecord >= 0 && endRecord < db.size {
-			previous := lastIndexByte(db.data, endRecord, db.LineEnding)
-			// eat the line ending or (if there is no line ending) move to the start
-			endIndex = previous + 1
+			endIndex = db.beginningOfLine(endRecord)
 		}
 	}
 
