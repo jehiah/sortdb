@@ -19,27 +19,54 @@ Records are matched by the first data column.
 
  * `/ping`  responsds with 200 `OK`
 
- * `/get?key=...` Response is `text/plain` with the full record that matched (excluding the key), or a 404 if no match.
+ * `/get?key=...` Response is `text/plain` with the full record that matched
+   (excluding the key), or a 404 if no match.
     
- * `/mget?key=...&key=...` Response is `text/plain` with all records that match (including the key), or an empty 200 if no matches
+ * `/mget?key=...&key=...` Response is `text/plain` with all records that match
+   (including the key), or an empty 200 if no matches
+
+ * `/fwmatch?key=...` Also known as prefix match. Response is `text/plain` with
+   the full records that have keys that start with the given key as a prefix,
+   or a 404 if no such records exist.
+
+ * `/range?start=...&end=...` Response is `text/plain` with the full records
+   that have keys lexically greater than or equal to the start key and less
+   than or equal to the end key, or a 404 if no such records exist. The end key
+   must be lexically greater than or equal to the start key.
 
  * `/stats` Response is `application/json` with the following payload
 
 ```json
 {
   "total_requests": 3,
-  "mget_requests": 0,
-  "mget_hits": 0,
-  "mget_misses": 0,
-  "mget_average_request": 0,
-  "mget_95": 0,
-  "mget_99": 0,
+}
+{
+  "total_requests": 2,
+  "total_seeks": 24,
   "get_requests": 3,
   "get_hits": 3,
   "get_misses": 0,
   "get_average_request": 448,
   "get_95": 1323,
   "get_99": 1323,
+  "mget_requests": 0,
+  "mget_hits": 0,
+  "mget_misses": 0,
+  "mget_average_request": 0,
+  "mget_95": 0,
+  "mget_99": 0,
+  "fwmatch_requests": 1,
+  "fwmatch_hits": 1,
+  "fwmatch_misses": 0,
+  "fwmatch_average_request": 10,
+  "fwmatch_95": 10,
+  "fwmatch_99": 10,
+  "range_requests": 2,
+  "range_hits": 1,
+  "range_misses": 1,
+  "range_average_request": 18,
+  "range_95": 24,
+  "range_99": 24,
   "db_size": 767557632,
   "db_mtime": 1435463934
 }
