@@ -196,12 +196,10 @@ func (s *httpServer) rangeHandler(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, "MISSING_ARG_END", 400)
 		return
 	}
-
 	if endKey < startKey {
 		http.Error(w, "MALFORMED_RANGE", 400)
 		return
 	}
-
 	startTime := time.Now()
 	atomic.AddUint64(&s.Requests, 1)
 	atomic.AddUint64(&s.RangeRequests, 1)
