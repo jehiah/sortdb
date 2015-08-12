@@ -136,7 +136,10 @@ func indexByte(s []byte, i, m int, c byte) int {
 	return -1
 }
 
-func (db *DB) findFirstRecord(needle []byte) int {
+// findFirstRecordAfterMatch performs a binary search to find the first record after
+// needle prefix matches. If includeExactMatch is set, returns the first record that exactly matches,
+// if it exists.
+func (db *DB) findFirstRecordAfterMatch(needle []byte, includeExactMatch bool) int {
 	needleLen := len(needle)
 
 	// binary search to find the index that matches our needle (starting at the previous line)
@@ -156,7 +159,14 @@ func (db *DB) findFirstRecord(needle []byte) int {
 		if previous+1+needleLen > db.size {
 			return false
 		}
-		return bytes.Compare(db.data[previous:previous+needleLen], needle) >= 0
+		endOfKey := indexByte(db.data, previous, db.size, db.RecordSeparator)
+
+		comparison := bytes.Compare(db.data[previous:endOfKey], needle)
+		if comparison == 0 {
+			return includeExactMatch
+		}
+
+		return comparison > 0
 	})
 }
 
@@ -168,7 +178,7 @@ func (db *DB) Search(needle []byte) []byte {
 	if db.size <= 0 {
 		panic("DB not Mapped")
 	}
-	i := db.findFirstRecord(needle)
+	i := db.findFirstRecordAfterMatch(needle, true)
 	if i < 0 || i == db.size {
 		db.RUnlock()
 		return nil
@@ -188,6 +198,41 @@ func (db *DB) Search(needle []byte) []byte {
 		return line
 	}
 	return nil
+}
+
+// RangeMatch uses binary searches to look for startNeedle and (if not nil) endNeedle.
+// Returns all full match lines that fall between startNeedle and endNeedle, inclusive.
+// startNeedle and endNeedle should already have the record separator appended.
+func (db *DB) RangeMatch(startNeedle []byte, endNeedle []byte) []byte {
+	db.RLock()
+
+	if db.size <= 0 {
+		panic("DB not Mapped")
+	}
+	startRecord := db.findFirstRecordAfterMatch(startNeedle, true)
+	if startRecord < 0 || startRecord == db.size {
+		db.RUnlock()
+		return nil
+	}
+	previous := lastIndexByte(db.data, startRecord, db.LineEnding)
+	// eat the line ending or (if there is no line ending) move to the start
+	startIndex := previous + 1
+
+	endIndex := db.size
+	if endNeedle != nil {
+		endRecord := db.findFirstRecordAfterMatch(endNeedle, false)
+		if endRecord >= 0 && endRecord < db.size {
+			previous := lastIndexByte(db.data, endRecord, db.LineEnding)
+			// eat the line ending or (if there is no line ending) move to the start
+			endIndex = previous + 1
+		}
+	}
+
+	// intentionally make a copy of data
+	records := []byte(db.data[startIndex:endIndex])
+	db.RUnlock()
+
+	return records
 }
 
 func (db *DB) SeekCount() uint64 {

@@ -82,3 +82,92 @@ func TestSearchCharset(t *testing.T) {
 		}
 	}
 }
+
+func TestForwardMatch(t *testing.T) {
+	f, err := os.Open("../test_data/testdb.tab")
+	if err != nil {
+		t.Fatalf("got error %s", err)
+	}
+	db, err := New(f)
+	if err != nil {
+		t.Fatalf("got error %s", err)
+	}
+
+	for _, tc := range []testSearch{
+		{"prefix", `prefix.1	how
+prefix.2	are
+prefix.3	you
+q	r
+s	t
+u	v
+w	x
+y	z
+zzzzzzzzzzzzzzzzzzzzzzzz	almost-sleepy
+zzzzzzzzzzzzzzzzzzzzzzzzz	very-sleepy
+zzzzzzzzzzzzzzzzzzzzzzzzzz	already-asleep
+`},
+		{"y", `y	z
+zzzzzzzzzzzzzzzzzzzzzzzz	almost-sleepy
+zzzzzzzzzzzzzzzzzzzzzzzzz	very-sleepy
+zzzzzzzzzzzzzzzzzzzzzzzzzz	already-asleep
+`},
+
+		{"y1", `zzzzzzzzzzzzzzzzzzzzzzzz	almost-sleepy
+zzzzzzzzzzzzzzzzzzzzzzzzz	very-sleepy
+zzzzzzzzzzzzzzzzzzzzzzzzzz	already-asleep
+`},
+
+		{"zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz", ""},
+	} {
+		actualRecords := db.RangeMatch([]byte(tc.needle), nil)
+		expectedRecords := []byte(tc.expected)
+
+		if bytes.Compare(expectedRecords, actualRecords) != 0 {
+			t.Errorf("for forward match from %q:\nExpected %q but got %q", tc.needle, expectedRecords, actualRecords)
+		}
+	}
+}
+
+type testRangeSearch struct {
+	startNeedle string
+	endNeedle   string
+	expected    string
+}
+
+func TestRangeMatch(t *testing.T) {
+	f, err := os.Open("../test_data/testdb.tab")
+	if err != nil {
+		t.Fatalf("got error %s", err)
+	}
+	db, err := New(f)
+	if err != nil {
+		t.Fatalf("got error %s", err)
+	}
+
+	for _, tc := range []testRangeSearch{
+		{"b", "c1", `b	third
+c	d
+`},
+		{"0", "9", ""},
+		{"p", "prefix.3", `prefix.1	how
+prefix.2	are
+prefix.3	you
+`},
+		{"prefix.11", "prefix.3", `prefix.2	are
+prefix.3	you
+`},
+		{"y", "z", "y	z\n"},
+
+		{"y1", "zzzzzzzzzzzzzzzzzzzzzzzz", `zzzzzzzzzzzzzzzzzzzzzzzz	almost-sleepy
+`},
+
+		{"zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz", "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz", ""},
+	} {
+		actualRecords := db.RangeMatch([]byte(tc.startNeedle), []byte(tc.endNeedle))
+		expectedRecords := []byte(tc.expected)
+
+		if bytes.Compare(expectedRecords, actualRecords) != 0 {
+			t.Errorf("for forward match from %q to %q:\nExpected %q but got %q", tc.startNeedle, tc.endNeedle, expectedRecords, actualRecords)
+		}
+	}
+}
