@@ -153,6 +153,13 @@ func indexByte(s []byte, i, m int, c byte) int {
 	return -1
 }
 
+// Copies all bytes in s to a new destination buffer
+func makeCopy(s []byte) []byte {
+	d := make([]byte, len(s))
+	copy(d, s)
+	return d
+}
+
 // findFirstMatch performs a binary search to find the first record
 // that matches needle using the given isMatch function, or -1 if
 // no match is found.
@@ -244,11 +251,11 @@ func (db *DB) Search(needle []byte) []byte {
 	previous := db.beginningOfLine(i)
 
 	lineEnd := db.endOfLine(previous)
-	// intentionally make a copy of data
-	line := []byte(db.data[previous:lineEnd])
+	// copy data before unlocking to avoid race conditions
+	line := makeCopy(db.data[previous:lineEnd])
 	db.RUnlock()
 
-	if bytes.Equal(line[:len(needle)], needle) {
+	if len(line) >= len(needle) && bytes.Equal(line[:len(needle)], needle) {
 		return line
 	}
 	return nil
@@ -272,8 +279,8 @@ func (db *DB) ForwardMatch(needle []byte) []byte {
 	if endRecord >= 0 && endRecord < db.size {
 		endIndex = db.beginningOfLine(endRecord)
 	}
-	// intentionally make a copy of data
-	records := []byte(db.data[startIndex:endIndex])
+	// copy data before unlocking to avoid race conditions
+	records := makeCopy(db.data[startIndex:endIndex])
 	db.RUnlock()
 
 	return records
@@ -305,8 +312,8 @@ func (db *DB) RangeMatch(startNeedle []byte, endNeedle []byte) []byte {
 	if endRecord >= 0 && endRecord < db.size {
 		endIndex = db.beginningOfLine(endRecord)
 	}
-	// intentionally make a copy of data
-	records := []byte(db.data[startIndex:endIndex])
+	// copy data before unlocking to avoid race conditions
+	records := makeCopy(db.data[startIndex:endIndex])
 	db.RUnlock()
 
 	return records
