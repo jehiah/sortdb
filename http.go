@@ -179,7 +179,7 @@ func (s *httpServer) fwmatchHandler(w http.ResponseWriter, req *http.Request) {
 	} else {
 		atomic.AddUint64(&s.FwMatchHits, 1)
 		w.Header().Set("Content-Type", "text/plain")
-		w.Header().Set("Content-Length", strconv.Itoa(len(content)+1))
+		w.Header().Set("Content-Length", strconv.Itoa(len(content)))
 		w.Write(content)
 	}
 	s.FwMatchMetrics.Status(startTime)
@@ -214,7 +214,7 @@ func (s *httpServer) rangeHandler(w http.ResponseWriter, req *http.Request) {
 	} else {
 		atomic.AddUint64(&s.RangeHits, 1)
 		w.Header().Set("Content-Type", "text/plain")
-		w.Header().Set("Content-Length", strconv.Itoa(len(content)+1))
+		w.Header().Set("Content-Length", strconv.Itoa(len(content)))
 		w.Write(content)
 	}
 	s.RangeMetrics.Status(startTime)
