@@ -89,7 +89,7 @@ func TestSearchWhileWriting(t *testing.T) {
 	// Overwrite the temporary file with a bunch of 0s,
 	// thus changing db.data (since it's mMapped to the file)
 	l := len(tc.expected) + len(tc.needle) + 1
-	n, err := f.WriteAt(make([]byte, l), 0)
+	n, err := fTmp.WriteAt(make([]byte, l), 0)
 	if err != nil {
 		t.Fatalf("got error %s", err)
 	}
