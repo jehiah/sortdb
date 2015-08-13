@@ -112,15 +112,15 @@ func (s *httpServer) getHandler(w http.ResponseWriter, req *http.Request) {
 	atomic.AddUint64(&s.Requests, 1)
 	atomic.AddUint64(&s.GetRequests, 1)
 
-	needle := append([]byte(key), s.ctx.db.RecordSeparator)
+	needle := []byte(key)
 	line := s.ctx.db.Search(needle)
 
 	if len(line) == 0 {
 		atomic.AddUint64(&s.GetMisses, 1)
 		http.Error(w, "NOT_FOUND", 404)
 	} else {
-		// we only output the 'value'
-		line = line[len(needle):]
+		// we only output the 'value', so skip the needle and record separator
+		line = line[len(needle)+1:]
 		atomic.AddUint64(&s.GetHits, 1)
 		w.Header().Set("Content-Type", "text/plain")
 		w.Header().Set("Content-Length", strconv.Itoa(len(line)+1))
@@ -143,7 +143,7 @@ func (s *httpServer) mgetHandler(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-Type", "text/plain")
 	var numFound int
 	for _, key := range req.Form["key"] {
-		needle := append([]byte(key), s.ctx.db.RecordSeparator)
+		needle := []byte(key)
 		line := s.ctx.db.Search(needle)
 		if len(line) != 0 {
 			numFound += 1

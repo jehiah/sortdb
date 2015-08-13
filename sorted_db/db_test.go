@@ -53,7 +53,7 @@ func TestSearch(t *testing.T) {
 			result = result[len(tc.needle)+1:]
 		}
 		if !bytes.Equal(result, []byte(tc.expected)) {
-			t.Errorf("expected %q got %q expected %q", tc.needle, result, tc.expected)
+			t.Errorf("query %q got %q expected %q", tc.needle, result, tc.expected)
 		}
 	}
 

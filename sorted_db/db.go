@@ -206,7 +206,6 @@ func (db *DB) findEndOfRange(endNeedle []byte) int {
 }
 
 // Search uses a binary search looking for needle, and returns the full match line.
-// needle should already end with the record separator.
 func (db *DB) Search(needle []byte) []byte {
 	db.RLock()
 
