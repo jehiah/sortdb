@@ -288,7 +288,7 @@ func (db *DB) RangeMatch(startNeedle []byte, endNeedle []byte) []byte {
 	if db.size <= 0 {
 		panic("DB not Mapped")
 	}
-	if endNeedle != nil && bytes.Compare(startNeedle, endNeedle) > 0 {
+	if bytes.Compare(startNeedle, endNeedle) > 0 {
 		// end is smaller than start, so the range is ill-defined
 		db.RUnlock()
 		return nil
@@ -301,11 +301,9 @@ func (db *DB) RangeMatch(startNeedle []byte, endNeedle []byte) []byte {
 	startIndex := db.beginningOfLine(startRecord)
 
 	endIndex := db.size
-	if endNeedle != nil {
-		endRecord := db.findEndOfRange(endNeedle)
-		if endRecord >= 0 && endRecord < db.size {
-			endIndex = db.beginningOfLine(endRecord)
-		}
+	endRecord := db.findEndOfRange(endNeedle)
+	if endRecord >= 0 && endRecord < db.size {
+		endIndex = db.beginningOfLine(endRecord)
 	}
 	// intentionally make a copy of data
 	records := []byte(db.data[startIndex:endIndex])
