@@ -145,10 +145,15 @@ func TestRangeMatch(t *testing.T) {
 	}
 
 	for _, tc := range []testRangeSearch{
+		{"0", "9", ""},
+		{"0", "c1", `a	first record
+aa	another first
+b	third
+c	d
+`},
 		{"b", "c1", `b	third
 c	d
 `},
-		{"0", "9", ""},
 		{"c", "b", ""},
 		{"p", "prefix.3", `prefix.1	how
 prefix.2	are
@@ -156,6 +161,11 @@ prefix.3	you
 `},
 		{"prefix.11", "prefix.3", `prefix.2	are
 prefix.3	you
+`},
+		{"y", "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz", `y	z
+zzzzzzzzzzzzzzzzzzzzzzzz	almost-sleepy
+zzzzzzzzzzzzzzzzzzzzzzzzz	very-sleepy
+zzzzzzzzzzzzzzzzzzzzzzzzzz	already-asleep
 `},
 		{"y", "z", "y	z\n"},
 
