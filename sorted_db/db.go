@@ -155,7 +155,7 @@ func indexByte(s []byte, i, m int, c byte) int {
 // findFirstMatch performs a binary search to find the first record
 // that matches needle using the given isMatch function, or -1 if
 // no match is found.
-func (db *DB) findFirstMatch(needle []byte, isMatch func([]byte, []byte) bool) int {
+func (db *DB) findFirstMatch(needle []byte, isMatch func([]byte) bool) int {
 	needleLen := len(needle)
 
 	// binary search to find the index that matches our needle,
@@ -180,7 +180,7 @@ func (db *DB) findFirstMatch(needle []byte, isMatch func([]byte, []byte) bool) i
 		if endOfKey < 0 {
 			endOfKey = db.size
 		}
-		return isMatch(db.data[previous:endOfKey], needle)
+		return isMatch(db.data[previous:endOfKey])
 	})
 }
 
@@ -189,8 +189,8 @@ func (db *DB) findFirstMatch(needle []byte, isMatch func([]byte, []byte) bool) i
 // In other words, it finds the first record in the range started by
 // startNeedle.
 func (db *DB) findStartOfRange(startNeedle []byte) int {
-	return db.findFirstMatch(startNeedle, func(a []byte, b []byte) bool {
-		return bytes.Compare(a, b) >= 0
+	return db.findFirstMatch(startNeedle, func(key []byte) bool {
+		return bytes.Compare(key, startNeedle) >= 0
 	})
 }
 
@@ -199,8 +199,8 @@ func (db *DB) findStartOfRange(startNeedle []byte) int {
 // In other words, it finds the first record beyond the range ended by
 // endNeedle.
 func (db *DB) findEndOfRange(endNeedle []byte) int {
-	return db.findFirstMatch(endNeedle, func(a []byte, b []byte) bool {
-		return bytes.Compare(a, b) > 0
+	return db.findFirstMatch(endNeedle, func(key []byte) bool {
+		return bytes.Compare(key, endNeedle) > 0
 	})
 }
 
