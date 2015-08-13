@@ -171,7 +171,7 @@ func (s *httpServer) fwmatchHandler(w http.ResponseWriter, req *http.Request) {
 	atomic.AddUint64(&s.FwMatchRequests, 1)
 
 	needle := []byte(key)
-	content := s.ctx.db.RangeMatch(needle, nil)
+	content := s.ctx.db.ForwardMatch(needle)
 
 	if len(content) == 0 {
 		atomic.AddUint64(&s.FwMatchMisses, 1)

@@ -94,32 +94,21 @@ func TestForwardMatch(t *testing.T) {
 	}
 
 	for _, tc := range []testSearch{
-		{"prefix", `prefix.1	how
+		{"pre", `prefix.1	how
 prefix.2	are
 prefix.3	you
-q	r
-s	t
-u	v
-w	x
-y	z
-zzzzzzzzzzzzzzzzzzzzzzzz	almost-sleepy
-zzzzzzzzzzzzzzzzzzzzzzzzz	very-sleepy
-zzzzzzzzzzzzzzzzzzzzzzzzzz	already-asleep
 `},
 		{"y", `y	z
-zzzzzzzzzzzzzzzzzzzzzzzz	almost-sleepy
-zzzzzzzzzzzzzzzzzzzzzzzzz	very-sleepy
-zzzzzzzzzzzzzzzzzzzzzzzzzz	already-asleep
 `},
 
-		{"y1", `zzzzzzzzzzzzzzzzzzzzzzzz	almost-sleepy
+		{"zzzzzz", `zzzzzzzzzzzzzzzzzzzzzzzz	almost-sleepy
 zzzzzzzzzzzzzzzzzzzzzzzzz	very-sleepy
 zzzzzzzzzzzzzzzzzzzzzzzzzz	already-asleep
 `},
 
 		{"zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz", ""},
 	} {
-		actualRecords := db.RangeMatch([]byte(tc.needle), nil)
+		actualRecords := db.ForwardMatch([]byte(tc.needle))
 		expectedRecords := []byte(tc.expected)
 
 		if bytes.Compare(expectedRecords, actualRecords) != 0 {

@@ -25,9 +25,9 @@ Records are matched by the first data column.
  * `/mget?key=...&key=...` Response is `text/plain` with all records that match
    (including the key), or an empty 200 if no matches
 
- * `/fwmatch?key=...` Response is `text/plain` with the full records that have
-   keys lexically greater than or equal to the key, or a 404 if no such records
-   exist.
+ * `/fwmatch?key=...` Also known as prefix match. Response is `text/plain` with
+   the full records that have keys that start with the given key as a prefix,
+   or a 404 if no such records exist.
 
  * `/range?start=...&end=...` Response is `text/plain` with the full records
    that have keys lexically greater than or equal to the start key and less

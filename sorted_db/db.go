@@ -205,6 +205,30 @@ func (db *DB) findEndOfRange(endNeedle []byte) int {
 	})
 }
 
+// forwardMatchRecords gets the start and end indices of all records that
+// needle forward (prefix) matches.
+func (db *DB) forwardMatchRecords(needle []byte) (int, int) {
+	needleLen := len(needle)
+
+	// Get the beginning of the first record that forward matches
+	startIndex := db.findFirstMatch(needle, func(key []byte) bool {
+		if len(key) > needleLen {
+			key = key[:needleLen]
+		}
+		return bytes.Compare(key, needle) >= 0
+	})
+
+	// Get the beginning of the first record that DOESN'T forward match
+	endIndex := db.findFirstMatch(needle, func(key []byte) bool {
+		if len(key) > needleLen {
+			key = key[:needleLen]
+		}
+		return bytes.Compare(key, needle) > 0
+	})
+
+	return startIndex, endIndex
+}
+
 // Search uses a binary search looking for needle, and returns the full match line.
 func (db *DB) Search(needle []byte) []byte {
 	db.RLock()
@@ -228,6 +252,31 @@ func (db *DB) Search(needle []byte) []byte {
 		return line
 	}
 	return nil
+}
+
+// Retrieves all records that have keys starting with needle.
+func (db *DB) ForwardMatch(needle []byte) []byte {
+	db.RLock()
+
+	if db.size <= 0 {
+		panic("DB not Mapped")
+	}
+	startRecord, endRecord := db.forwardMatchRecords(needle)
+	if startRecord < 0 || startRecord == db.size {
+		db.RUnlock()
+		return nil
+	}
+	startIndex := db.beginningOfLine(startRecord)
+
+	endIndex := db.size
+	if endRecord >= 0 && endRecord < db.size {
+		endIndex = db.beginningOfLine(endRecord)
+	}
+	// intentionally make a copy of data
+	records := []byte(db.data[startIndex:endIndex])
+	db.RUnlock()
+
+	return records
 }
 
 // RangeMatch uses binary searches to look for startNeedle and (if not nil)
