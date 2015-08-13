@@ -2,6 +2,8 @@ package sorted_db
 
 import (
 	"bytes"
+	"io"
+	"io/ioutil"
 	"os"
 	"testing"
 )
@@ -57,6 +59,47 @@ func TestSearch(t *testing.T) {
 		}
 	}
 
+}
+
+// Tests that slices returned by Search aren't modified by changes
+// to the DB file afterwards.
+func TestSearchWhileWriting(t *testing.T) {
+	fi, err := os.Open("../test_data/testdb.tab")
+	if err != nil {
+		t.Fatalf("got error %s", err)
+	}
+	// Create a temporary copy of the DB file since we have to write to the DB
+	// for this test to work
+	f, err := ioutil.TempFile("../test_data", "tmp_testdb")
+	if err != nil {
+		t.Fatalf("got error %s", err)
+	}
+	defer os.Remove(f.Name())
+	io.Copy(f, fi)
+	if err != nil {
+		t.Fatalf("got error %s", err)
+	}
+	db, err := New(f)
+	if err != nil {
+		t.Fatalf("got error %s", err)
+	}
+	tc := testSearch{"a", "first record"}
+	result := db.Search([]byte(tc.needle))
+
+	toWrite := len(tc.expected) + len(tc.needle) + 1
+	w, err := f.WriteAt(make([]byte, toWrite), 0)
+	if err != nil {
+		t.Fatalf("got error %s", err)
+	}
+	if w != toWrite {
+		t.Fatalf("failed to overwrite record in DB file")
+	}
+	if len(result) > 0 {
+		result = result[len(tc.needle)+1:]
+	}
+	if !bytes.Equal(result, []byte(tc.expected)) {
+		t.Errorf("query %q got %q expected %q", tc.needle, result, tc.expected)
+	}
 }
 
 func TestSearchCharset(t *testing.T) {

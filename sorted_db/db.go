@@ -136,6 +136,13 @@ func indexByte(s []byte, i, m int, c byte) int {
 	return -1
 }
 
+// Copies all bytes in s to a new destination buffer
+func makeCopy(s []byte) []byte {
+	d := make([]byte, len(s))
+	copy(d, s)
+	return d
+}
+
 // Search uses a binary search looking for needle, and returns the full match line.
 // the needle should already have the record separator appended
 func (db *DB) Search(needle []byte) []byte {
@@ -176,11 +183,11 @@ func (db *DB) Search(needle []byte) []byte {
 		previous++ // eat the line ending
 	}
 	lineEnd := indexByte(db.data, previous, db.size, db.LineEnding)
-	// intentionally make a copy of data
-	line := []byte(db.data[previous:lineEnd])
+	// copy data before unlocking to avoid race conditions
+	line := makeCopy(db.data[previous:lineEnd])
 	db.RUnlock()
 
-	if bytes.Equal(line[:len(needle)], needle) {
+	if len(line) >= len(needle) && bytes.Equal(line[:len(needle)], needle) {
 		return line
 	}
 	return nil
