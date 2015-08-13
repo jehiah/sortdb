@@ -116,12 +116,13 @@ func (db *DB) Remap() error {
 	return nil
 }
 
-// beginningOfLine retrieves the beginning of the line that includes i
-// by searching for the last line separator occurrence before position.
+// beginningOfLine locates the beginning of the line that includes i
+// by searching for the last line separator occurrence before i.
 func (db *DB) beginningOfLine(i int) int {
-	// sets the index to the first non-line-ending byte (or to the
+	previous := lastIndexByte(db.data, i, db.LineEnding)
+	// returns the index to the first non-line-ending byte (or to the
 	// beginning of the DB if no line ending is found)
-	return lastIndexByte(db.data, i, db.LineEnding) + 1
+	return previous + 1
 }
 
 // endOfLine locates the end of the line that includes i
