@@ -124,6 +124,12 @@ func (db *DB) beginningOfLine(i int) int {
 	return lastIndexByte(db.data, i, db.LineEnding) + 1
 }
 
+// endOfLine locates the end of the line that includes i
+// by searching for the first line separator occurrence after i.
+func (db *DB) endOfLine(i int) int {
+	return indexByte(db.data, i, db.size, db.LineEnding)
+}
+
 // lastIndexByte returns the index of the first instance of c in s before i. If
 // c is not present in s, or -1 if c is not present in s before i.
 func lastIndexByte(s []byte, i int, c byte) int {
@@ -169,7 +175,7 @@ func (db *DB) findFirstMatch(needle []byte, isMatch func([]byte, []byte) bool) i
 		}
 		endOfKey := indexByte(db.data, previous, db.size, db.RecordSeparator)
 		if endOfKey < 0 {
-			endOfKey = indexByte(db.data, previous, db.size, db.LineEnding)
+			endOfKey = db.endOfLine(previous)
 		}
 		if endOfKey < 0 {
 			endOfKey = db.size
@@ -213,7 +219,7 @@ func (db *DB) Search(needle []byte) []byte {
 	}
 	previous := db.beginningOfLine(i)
 
-	lineEnd := indexByte(db.data, previous, db.size, db.LineEnding)
+	lineEnd := db.endOfLine(previous)
 	// intentionally make a copy of data
 	line := []byte(db.data[previous:lineEnd])
 	db.RUnlock()
