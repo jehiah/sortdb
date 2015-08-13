@@ -64,34 +64,36 @@ func TestSearch(t *testing.T) {
 // Tests that slices returned by Search aren't modified by changes
 // to the DB file afterwards.
 func TestSearchWhileWriting(t *testing.T) {
-	fi, err := os.Open("../test_data/testdb.tab")
+	f, err := os.Open("../test_data/testdb.tab")
 	if err != nil {
 		t.Fatalf("got error %s", err)
 	}
 	// Create a temporary copy of the DB file since we have to write to the DB
 	// for this test to work
-	f, err := ioutil.TempFile("../test_data", "tmp_testdb")
+	fTmp, err := ioutil.TempFile("../test_data", "tmp_testdb")
 	if err != nil {
 		t.Fatalf("got error %s", err)
 	}
-	defer os.Remove(f.Name())
-	io.Copy(f, fi)
+	defer os.Remove(fTmp.Name())
+	io.Copy(fTmp, f)
 	if err != nil {
 		t.Fatalf("got error %s", err)
 	}
-	db, err := New(f)
+	db, err := New(fTmp)
 	if err != nil {
 		t.Fatalf("got error %s", err)
 	}
 	tc := testSearch{"a", "first record"}
 	result := db.Search([]byte(tc.needle))
 
-	toWrite := len(tc.expected) + len(tc.needle) + 1
-	w, err := f.WriteAt(make([]byte, toWrite), 0)
+	// Overwrite the temporary file with a bunch of 0s,
+	// thus changing db.data (since it's mMapped to the file)
+	l := len(tc.expected) + len(tc.needle) + 1
+	n, err := f.WriteAt(make([]byte, l), 0)
 	if err != nil {
 		t.Fatalf("got error %s", err)
 	}
-	if w != toWrite {
+	if n != l {
 		t.Fatalf("failed to overwrite record in DB file")
 	}
 	if len(result) > 0 {
