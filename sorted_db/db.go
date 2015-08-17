@@ -175,20 +175,33 @@ func (db *DB) findFirstMatch(needle []byte, isMatch func([]byte) bool) int {
 		// find previous line starting point
 		atomic.AddUint64(&db.seekCount, 1)
 
-		previous := db.beginningOfLine(i)
+		startOfKey := db.beginningOfLine(i)
 
 		// make sure we have space before end of the buffer
-		if previous+1+needleLen > db.size {
+		if startOfKey+1+needleLen > db.size {
 			return false
 		}
-		endOfKey := indexByte(db.data, previous, db.size, db.RecordSeparator)
-		if endOfKey < 0 {
-			endOfKey = db.endOfLine(previous)
+
+		// The list of delimiters that can end a key
+		d := [...]byte{
+			db.RecordSeparator,
+			db.LineEnding,
+		}
+
+		// Find the first delimiter that occurs after the start of this key by
+		// searching for each delimiter and taking the minimum index that isn't -1
+		endOfKey := -1
+		for _, e := range d {
+			i := indexByte(db.data, startOfKey, db.size, e)
+			if i != -1 && (endOfKey < 0 || i < endOfKey) {
+				endOfKey = i
+			}
 		}
 		if endOfKey < 0 {
+			// If no delimiter was found, just seek to the end of the DB
 			endOfKey = db.size
 		}
-		return isMatch(db.data[previous:endOfKey])
+		return isMatch(db.data[startOfKey:endOfKey])
 	})
 }
 
@@ -217,7 +230,14 @@ func (db *DB) findEndOfRange(endNeedle []byte) int {
 func (db *DB) forwardMatchRecords(needle []byte) (int, int) {
 	needleLen := len(needle)
 
-	// Get the beginning of the first record that forward matches
+	// To find the range of records that forward matches, we'll perform two
+	// binary searches. sort.Search is effective at finding the start of a range where
+	// a given query holds true, so we'll use the following set difference to find
+	// the range that we want.
+	// (records where prefix >= needle) - (records where prefix > needle) =
+	// (records where prefix == needle)
+
+	// Find the first record where the prefix is equal to or greater than needle
 	startIndex := db.findFirstMatch(needle, func(key []byte) bool {
 		if len(key) > needleLen {
 			key = key[:needleLen]
@@ -225,7 +245,7 @@ func (db *DB) forwardMatchRecords(needle []byte) (int, int) {
 		return bytes.Compare(key, needle) >= 0
 	})
 
-	// Get the beginning of the first record that DOESN'T forward match
+	// Find the first record where the prefix is STRICTLY greater than needle
 	endIndex := db.findFirstMatch(needle, func(key []byte) bool {
 		if len(key) > needleLen {
 			key = key[:needleLen]
@@ -261,7 +281,7 @@ func (db *DB) Search(needle []byte) []byte {
 	return nil
 }
 
-// Retrieves all records that have keys starting with needle.
+// ForwardMatch retrieves all records that have keys starting with needle.
 func (db *DB) ForwardMatch(needle []byte) []byte {
 	db.RLock()
 
