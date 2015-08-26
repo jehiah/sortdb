@@ -1,10 +1,34 @@
 sortdb
 ======
 
-Sortdb makes a sorted tab (tsv) or comma (csv) delimitated file accessible via HTTP.
+Sortdb makes a sorted tab (tsv) or comma (csv) delimitated file accessible via HTTP using mmap.
 
 [![Build Status](https://secure.travis-ci.org/jehiah/sortdb.svg?branch=master)](http://travis-ci.org/jehiah/sortdb)
 
+### Installing
+
+Pre-built binaries for linux and darwin are available for download:
+
+**Current Stable Release: `v1.1`**
+
+* [sortdb-1.1.darwin-amd64.go1.4.2.tar.gz](https://github.com/jehiah/sortdb/releases/download/v1.1/sortdb-1.1.darwin-amd64.go1.4.2.tar.gz)
+* [sortdb-1.1.darwin-amd64.go1.4.2.tar.gz](https://github.com/jehiah/sortdb/releases/download/v1.1/sortdb-1.1.darwin-amd64.go1.4.2.tar.gz)
+
+**Older Stable Releases:**
+
+* [sortdb-1.0.darwin-amd64.go1.4.2.tar.gz](https://github.com/jehiah/sortdb/releases/download/v1.0/sortdb-1.0.darwin-amd64.go1.4.2.tar.gz)
+* [sortdb-1.0.darwin-amd64.go1.4.2.tar.gz](https://github.com/jehiah/sortdb/releases/download/v1.0/sortdb-1.0.darwin-amd64.go1.4.2.tar.gz)
+
+**Building From Source**
+
+Pre-requisites:
+
+* golang (version 1.2+ is required)
+* gpm (dependency manager)
+
+`sortdb` uses gpm to manage dependencies and produce reliable builds. Using gpm is the preferred method when compiling from source.
+
+### Usage
 
     Usage of ./sortdb:
       -db-file="": db file
@@ -13,33 +37,28 @@ Sortdb makes a sorted tab (tsv) or comma (csv) delimitated file accessible via H
       -http-address=":8080": http address to listen on
       -version=false: print version string
 
-Records are matched by the first data column.
+### API Endpoints:
 
-### API endpoints:
-
- * `/ping`  responsds with 200 `OK`
+ * `/ping`  Responds with HTTP 200 `OK`
 
  * `/get?key=...` Response is `text/plain` with the full record that matched
-   (excluding the key), or a 404 if no match.
+   (excluding the key), or a HTTP 404 if no match.
     
  * `/mget?key=...&key=...` Response is `text/plain` with all records that match
-   (including the key), or an empty 200 if no matches
+   (including the key), or an empty HTTP 200 if no matches
 
  * `/fwmatch?key=...` Also known as prefix match. Response is `text/plain` with
    the full records that have keys that start with the given key as a prefix,
-   or a 404 if no such records exist.
+   or a HTTP 404 if no such records exist.
 
  * `/range?start=...&end=...` Response is `text/plain` with the full records
    that have keys lexically greater than or equal to the start key and less
-   than or equal to the end key, or a 404 if no such records exist. The end key
+   than or equal to the end key, or a HTTP 404 if no such records exist. The end key
    must be lexically greater than or equal to the start key.
 
  * `/stats` Response is `application/json` with the following payload
 
 ```json
-{
-  "total_requests": 3,
-}
 {
   "total_requests": 2,
   "total_seeks": 24,
@@ -72,7 +91,7 @@ Records are matched by the first data column.
 }
 ```
  
- * `/reload` reload/remap the db file
+ * `/reload` re-mmap the db file
  
  * `/exit` cause the current process to exit
  
