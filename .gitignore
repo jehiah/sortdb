@@ -1,3 +1,8 @@
+dist
+bin
+vendor
+pkg
+
+# obsolete
 sortdb
 .godeps
-dist

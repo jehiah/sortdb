@@ -10,8 +10,8 @@ import (
 	"runtime"
 	"syscall"
 
-	"github.com/jehiah/sortdb/sorted_db"
-	"github.com/jehiah/sortdb/util"
+	"lib/sorteddb"
+	"lib/util"
 )
 
 func main() {
@@ -37,7 +37,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("ERROR opening %q %s", *file, err)
 	}
-	db, err := sorted_db.New(f)
+	db, err := sorteddb.New(f)
 	if err != nil {
 		log.Fatalf("ERROR creating db %s", err)
 	}
