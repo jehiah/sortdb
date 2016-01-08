@@ -275,7 +275,8 @@ func (db *DB) Search(needle []byte) []byte {
 	line := makeCopy(db.data[previous:lineEnd])
 	db.RUnlock()
 
-	if len(line) >= len(needle) && bytes.Equal(line[:len(needle)], needle) {
+	if len(line) >= len(needle) && bytes.Equal(line[:len(needle)], needle) &&
+		line[len(needle)] == db.RecordSeparator {
 		return line
 	}
 	return nil
