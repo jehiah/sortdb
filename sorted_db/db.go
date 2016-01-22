@@ -65,6 +65,16 @@ func (db *DB) Open(f *os.File) error {
 	db.f = f
 	db.data = data
 	db.size = size
+	lockerr := data.Lock()
+	if lockerr == nil {
+		log.Printf("DB MLock engaged!")
+	} else {
+		// Fixme -- print error for real
+		// Also for our purposes it would probably be better
+		// to flat-out quit in this case. Also, a command-line option,
+		// bla bla...
+		log.Printf("DB MLock could not be engaged: %s", err)
+	}
 	return nil
 }
 
