@@ -19,14 +19,15 @@ type DB struct {
 	data      mmap.Mmap
 	seekCount uint64
 	size      int
+	mlock     bool
 
 	RecordSeparator byte
 	LineEnding      byte
 }
 
 // Create a new DB structure Opened against the specified file
-func New(f *os.File) (*DB, error) {
-	db := &DB{RecordSeparator: '\t', LineEnding: '\n', size: -1}
+func New(f *os.File, mlock bool) (*DB, error) {
+	db := &DB{RecordSeparator: '\t', LineEnding: '\n', size: -1, mlock: mlock}
 	err := db.Open(f)
 	return db, err
 }
@@ -65,15 +66,15 @@ func (db *DB) Open(f *os.File) error {
 	db.f = f
 	db.data = data
 	db.size = size
-	lockerr := data.Lock()
-	if lockerr == nil {
-		log.Printf("DB MLock engaged!")
-	} else {
-		// Fixme -- print error for real
-		// Also for our purposes it would probably be better
-		// to flat-out quit in this case. Also, a command-line option,
-		// bla bla...
-		log.Printf("DB MLock could not be engaged: %s", err)
+	if db.mlock {
+		lockErr := data.Lock()
+		if lockErr == nil {
+			log.Printf("DB MLock engaged!")
+		} else {
+			// Fixme -- print error for real
+			// make sure quits
+			log.Printf("DB MLock could not be engaged: %s", err)
+		}
 	}
 	return nil
 }
