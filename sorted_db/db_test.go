@@ -38,7 +38,7 @@ func TestSearch(t *testing.T) {
 	if err != nil {
 		t.Fatalf("got error %s", err)
 	}
-	db, err := New(f)
+	db, err := New(f, false)
 	if err != nil {
 		t.Fatalf("got error %s", err)
 	}
@@ -79,7 +79,7 @@ func TestSearchWhileWriting(t *testing.T) {
 	if err != nil {
 		t.Fatalf("got error %s", err)
 	}
-	db, err := New(fTmp)
+	db, err := New(fTmp, false)
 	if err != nil {
 		t.Fatalf("got error %s", err)
 	}
@@ -109,7 +109,7 @@ func TestSearchCharset(t *testing.T) {
 	if err != nil {
 		t.Fatalf("got error %s", err)
 	}
-	db, err := New(f)
+	db, err := New(f, false)
 	if err != nil {
 		t.Fatalf("got error %s", err)
 	}
@@ -133,7 +133,7 @@ func TestForwardMatch(t *testing.T) {
 	if err != nil {
 		t.Fatalf("got error %s", err)
 	}
-	db, err := New(f)
+	db, err := New(f, false)
 	if err != nil {
 		t.Fatalf("got error %s", err)
 	}
@@ -173,7 +173,7 @@ func TestRangeMatch(t *testing.T) {
 	if err != nil {
 		t.Fatalf("got error %s", err)
 	}
-	db, err := New(f)
+	db, err := New(f, false)
 	if err != nil {
 		t.Fatalf("got error %s", err)
 	}
