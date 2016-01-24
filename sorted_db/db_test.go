@@ -33,12 +33,12 @@ type testSearch struct {
 	expected string
 }
 
-func TestSearch(t *testing.T) {
+func _TestSearch(t *testing.T, mlock bool) {
 	f, err := os.Open("../test_data/testdb.tab")
 	if err != nil {
 		t.Fatalf("got error %s", err)
 	}
-	db, err := New(f, false)
+	db, err := New(f, mlock)
 	if err != nil {
 		t.Fatalf("got error %s", err)
 	}
@@ -59,6 +59,14 @@ func TestSearch(t *testing.T) {
 		}
 	}
 
+}
+
+func TestSearch(t *testing.T) {
+	_TestSearch(t, false)
+}
+
+func TestSearchMlock(t *testing.T) {
+	_TestSearch(t, true)
 }
 
 // Tests that slices returned by Search aren't modified by changes
