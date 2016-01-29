@@ -71,7 +71,6 @@ func (db *DB) Open(f *os.File) error {
 		if lockErr == nil {
 			log.Printf("DB MLock engaged!")
 		} else {
-			// Quit immediately in this case.
 			log.Fatalf("ERROR: DB MLock could not be engaged: %s", lockErr)
 		}
 	}
