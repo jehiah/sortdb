@@ -14,14 +14,16 @@ import (
 )
 
 type DB struct {
-	sync.RWMutex
+	RecordSeparator byte
+	LineEnding      byte
+
 	f         *os.File
 	data      mmap.Mmap
 	seekCount uint64
 	size      int
+	mlock     bool
 
-	RecordSeparator byte
-	LineEnding      byte
+	mutex sync.RWMutex
 }
 
 // Create a new DB structure Opened against the specified file
@@ -33,8 +35,8 @@ func New(f *os.File) (*DB, error) {
 
 // Info returns the mmaped backing file size and modification time
 func (db *DB) Info() (int, time.Time) {
-	db.RLock()
-	defer db.RUnlock()
+	db.mutex.RLock()
+	defer db.mutex.RUnlock()
 	if db.f == nil {
 		return 0, time.Time{}
 	}
@@ -44,8 +46,8 @@ func (db *DB) Info() (int, time.Time) {
 
 // Open the DB against a backing file
 func (db *DB) Open(f *os.File) error {
-	db.Lock()
-	defer db.Unlock()
+	db.mutex.Lock()
+	defer db.mutex.Unlock()
 	if db.f != nil {
 		db.close()
 	}
@@ -65,25 +67,32 @@ func (db *DB) Open(f *os.File) error {
 	db.f = f
 	db.data = data
 	db.size = size
+	if db.mlock {
+		data.Lock()
+	}
 	return nil
 }
 
 // Close and unmap the existing DB backing file
-func (db *DB) Close() {
-	db.Lock()
-	defer db.Unlock()
-	db.close()
+// If Mlocked, data will be munlocked
+func (db *DB) Close() error {
+	db.mutex.Lock()
+	defer db.mutex.Unlock()
+	return db.close()
 }
 
 // close and unmap DB w/o locking
-func (db *DB) close() {
+func (db *DB) close() (err error) {
 	if db.data != nil {
+		if db.mlock {
+			db.munlock()
+		}
 		var name string
 		if db.f != nil {
 			name = db.f.Name()
 		}
 		log.Printf("DB Unmmap %d bytes %s", db.size, name)
-		db.data.Unmap()
+		err = db.data.Unmap()
 		db.data = nil
 	}
 	if db.f != nil {
@@ -92,17 +101,18 @@ func (db *DB) close() {
 		db.f = nil
 	}
 	db.size = -1
+	return
 }
 
 // Remap DB to the same backing file
 func (db *DB) Remap() error {
-	db.RLock()
+	db.mutex.RLock()
 	if db.f == nil {
-		db.RUnlock()
+		db.mutex.RUnlock()
 		return fmt.Errorf("DB must be open to remap")
 	}
 	filename := db.f.Name()
-	db.RUnlock()
+	db.mutex.RUnlock()
 
 	log.Printf("DB Remapping %s", filename)
 	f, err := os.Open(filename)
@@ -114,6 +124,32 @@ func (db *DB) Remap() error {
 		return err
 	}
 	return nil
+}
+
+// Mlock prevent the mmap from being paged to the swap area.
+func (db *DB) Mlock() error {
+	db.mutex.Lock()
+	if db.data == nil {
+		return fmt.Errorf("db not open")
+	}
+	defer db.mutex.Unlock()
+	db.mlock = true
+	return db.data.Lock()
+}
+
+// Munlock calls syscall.Munlock on the underlying data if already Mlock'd
+func (db *DB) Munlock() error {
+	db.mutex.Lock()
+	if db.data == nil {
+		return fmt.Errorf("db not open")
+	}
+	defer db.mutex.Unlock()
+	return db.munlock()
+}
+
+func (db *DB) munlock() error {
+	db.mlock = false
+	return db.data.Unlock()
 }
 
 // beginningOfLine locates the beginning of the line that includes i
@@ -258,14 +294,14 @@ func (db *DB) forwardMatchRecords(needle []byte) (int, int) {
 
 // Search uses a binary search looking for needle, and returns the full match line.
 func (db *DB) Search(needle []byte) []byte {
-	db.RLock()
+	db.mutex.RLock()
 
 	if db.size <= 0 {
 		panic("DB not Mapped")
 	}
 	i := db.findStartOfRange(needle)
 	if i < 0 || i == db.size {
-		db.RUnlock()
+		db.mutex.RUnlock()
 		return nil
 	}
 	previous := db.beginningOfLine(i)
@@ -273,7 +309,7 @@ func (db *DB) Search(needle []byte) []byte {
 	lineEnd := db.endOfLine(previous)
 	// copy data before unlocking to avoid race conditions
 	line := makeCopy(db.data[previous:lineEnd])
-	db.RUnlock()
+	db.mutex.RUnlock()
 
 	if len(line) > len(needle) && bytes.Equal(line[:len(needle)], needle) &&
 		line[len(needle)] == db.RecordSeparator {
@@ -284,14 +320,14 @@ func (db *DB) Search(needle []byte) []byte {
 
 // ForwardMatch retrieves all records that have keys starting with needle.
 func (db *DB) ForwardMatch(needle []byte) []byte {
-	db.RLock()
+	db.mutex.RLock()
 
 	if db.size <= 0 {
 		panic("DB not Mapped")
 	}
 	startRecord, endRecord := db.forwardMatchRecords(needle)
 	if startRecord < 0 || startRecord == db.size {
-		db.RUnlock()
+		db.mutex.RUnlock()
 		return nil
 	}
 	startIndex := db.beginningOfLine(startRecord)
@@ -302,7 +338,7 @@ func (db *DB) ForwardMatch(needle []byte) []byte {
 	}
 	// copy data before unlocking to avoid race conditions
 	records := makeCopy(db.data[startIndex:endIndex])
-	db.RUnlock()
+	db.mutex.RUnlock()
 
 	return records
 }
@@ -311,19 +347,19 @@ func (db *DB) ForwardMatch(needle []byte) []byte {
 // endNeedle. Returns all full match lines that fall between startNeedle and
 // endNeedle, inclusive.
 func (db *DB) RangeMatch(startNeedle []byte, endNeedle []byte) []byte {
-	db.RLock()
+	db.mutex.RLock()
 
 	if db.size <= 0 {
 		panic("DB not Mapped")
 	}
 	if bytes.Compare(startNeedle, endNeedle) > 0 {
 		// end is smaller than start, so the range is ill-defined
-		db.RUnlock()
+		db.mutex.RUnlock()
 		return nil
 	}
 	startRecord := db.findStartOfRange(startNeedle)
 	if startRecord < 0 || startRecord == db.size {
-		db.RUnlock()
+		db.mutex.RUnlock()
 		return nil
 	}
 	startIndex := db.beginningOfLine(startRecord)
@@ -335,7 +371,7 @@ func (db *DB) RangeMatch(startNeedle []byte, endNeedle []byte) []byte {
 	}
 	// copy data before unlocking to avoid race conditions
 	records := makeCopy(db.data[startIndex:endIndex])
-	db.RUnlock()
+	db.mutex.RUnlock()
 
 	return records
 }
