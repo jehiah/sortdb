@@ -33,12 +33,12 @@ type testSearch struct {
 	expected string
 }
 
-func TestSearch(t *testing.T) {
+func testSearchHelper(t *testing.T, mlock bool) {
 	f, err := os.Open("../test_data/testdb.tab")
 	if err != nil {
 		t.Fatalf("got error %s", err)
 	}
-	db, err := New(f)
+	db, err := New(f, mlock)
 	if err != nil {
 		t.Fatalf("got error %s", err)
 	}
@@ -61,6 +61,14 @@ func TestSearch(t *testing.T) {
 
 }
 
+func TestSearchWithoutMlock(t *testing.T) {
+	testSearchHelper(t, false)
+}
+
+func TestSearchWithMlock(t *testing.T) {
+	testSearchHelper(t, true)
+}
+
 // Tests that slices returned by Search aren't modified by changes
 // to the DB file afterwards.
 func TestSearchWhileWriting(t *testing.T) {
@@ -79,7 +87,7 @@ func TestSearchWhileWriting(t *testing.T) {
 	if err != nil {
 		t.Fatalf("got error %s", err)
 	}
-	db, err := New(fTmp)
+	db, err := New(fTmp, false)
 	if err != nil {
 		t.Fatalf("got error %s", err)
 	}
@@ -109,7 +117,7 @@ func TestSearchCharset(t *testing.T) {
 	if err != nil {
 		t.Fatalf("got error %s", err)
 	}
-	db, err := New(f)
+	db, err := New(f, false)
 	if err != nil {
 		t.Fatalf("got error %s", err)
 	}
@@ -133,7 +141,7 @@ func TestForwardMatch(t *testing.T) {
 	if err != nil {
 		t.Fatalf("got error %s", err)
 	}
-	db, err := New(f)
+	db, err := New(f, false)
 	if err != nil {
 		t.Fatalf("got error %s", err)
 	}
@@ -173,7 +181,7 @@ func TestRangeMatch(t *testing.T) {
 	if err != nil {
 		t.Fatalf("got error %s", err)
 	}
-	db, err := New(f)
+	db, err := New(f, false)
 	if err != nil {
 		t.Fatalf("got error %s", err)
 	}

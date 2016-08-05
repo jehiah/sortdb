@@ -20,6 +20,7 @@ func main() {
 	httpAddress := flag.String("http-address", ":8080", "http address to listen on")
 	fieldSeparator := flag.String("field-separator", "\t", "field separator (eg: comma, tab, pipe)")
 	requestLogging := flag.Bool("enable-logging", false, "request logging")
+	mlock := flag.Bool("mlock", false, "lock pages in memory")
 
 	flag.Parse()
 
@@ -36,7 +37,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("ERROR opening %q %s", *file, err)
 	}
-	db, err := sorted_db.New(f)
+	db, err := sorted_db.New(f, *mlock)
 	if err != nil {
 		log.Fatalf("ERROR creating db %s", err)
 	}
