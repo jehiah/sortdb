@@ -12,12 +12,12 @@ Pre-built binaries for linux and darwin are available for download:
 **Current Stable Release: `v1.1`**
 
 * [sortdb-1.1.darwin-amd64.go1.4.2.tar.gz](https://github.com/jehiah/sortdb/releases/download/v1.1/sortdb-1.1.darwin-amd64.go1.4.2.tar.gz)
-* [sortdb-1.1.darwin-amd64.go1.4.2.tar.gz](https://github.com/jehiah/sortdb/releases/download/v1.1/sortdb-1.1.darwin-amd64.go1.4.2.tar.gz)
+* [sortdb-1.1.linux-amd64.go1.4.2.tar.gz](https://github.com/jehiah/sortdb/releases/download/v1.1/sortdb-1.1.linux-amd64.go1.4.2.tar.gz)
 
 **Older Stable Releases:**
 
 * [sortdb-1.0.darwin-amd64.go1.4.2.tar.gz](https://github.com/jehiah/sortdb/releases/download/v1.0/sortdb-1.0.darwin-amd64.go1.4.2.tar.gz)
-* [sortdb-1.0.darwin-amd64.go1.4.2.tar.gz](https://github.com/jehiah/sortdb/releases/download/v1.0/sortdb-1.0.darwin-amd64.go1.4.2.tar.gz)
+* [sortdb-1.0.linux-amd64.go1.4.2.tar.gz](https://github.com/jehiah/sortdb/releases/download/v1.0/sortdb-1.0.linux-amd64.go1.4.2.tar.gz)
 
 **Building From Source**
 
