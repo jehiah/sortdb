@@ -1,4 +1,4 @@
-package sorted_db
+package sorteddb
 
 import (
 	"bytes"
@@ -34,7 +34,7 @@ type testSearch struct {
 }
 
 func TestSearch(t *testing.T) {
-	f, err := os.Open("../test_data/testdb.tab")
+	f, err := os.Open("testdata/testdb.tab")
 	if err != nil {
 		t.Fatalf("got error %s", err)
 	}
@@ -64,13 +64,13 @@ func TestSearch(t *testing.T) {
 // Tests that slices returned by Search aren't modified by changes
 // to the DB file afterwards.
 func TestSearchWhileWriting(t *testing.T) {
-	f, err := os.Open("../test_data/testdb.tab")
+	f, err := os.Open("testdata/testdb.tab")
 	if err != nil {
 		t.Fatalf("got error %s", err)
 	}
 	// Create a temporary copy of the DB file since we have to write to the DB
 	// for this test to work
-	fTmp, err := ioutil.TempFile("../test_data", "tmp_testdb")
+	fTmp, err := ioutil.TempFile("testdata", "tmp_testdb")
 	if err != nil {
 		t.Fatalf("got error %s", err)
 	}
@@ -105,7 +105,7 @@ func TestSearchWhileWriting(t *testing.T) {
 }
 
 func TestSearchCharset(t *testing.T) {
-	f, err := os.Open("../test_data/char_test.tsv")
+	f, err := os.Open("testdata/char_test.tsv")
 	if err != nil {
 		t.Fatalf("got error %s", err)
 	}
@@ -129,7 +129,7 @@ func TestSearchCharset(t *testing.T) {
 }
 
 func TestForwardMatch(t *testing.T) {
-	f, err := os.Open("../test_data/testdb.tab")
+	f, err := os.Open("testdata/testdb.tab")
 	if err != nil {
 		t.Fatalf("got error %s", err)
 	}
@@ -169,7 +169,7 @@ type testRangeSearch struct {
 }
 
 func TestRangeMatch(t *testing.T) {
-	f, err := os.Open("../test_data/testdb.tab")
+	f, err := os.Open("testdata/testdb.tab")
 	if err != nil {
 		t.Fatalf("got error %s", err)
 	}

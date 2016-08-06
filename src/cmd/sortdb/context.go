@@ -5,12 +5,12 @@ import (
 	"net"
 	"os"
 
-	"github.com/jehiah/sortdb/sorted_db"
-	"github.com/jehiah/sortdb/util"
+	"lib/sorteddb"
+	"lib/util"
 )
 
 type Context struct {
-	db           *sorted_db.DB
+	db           *sorteddb.DB
 	httpAddr     *net.TCPAddr
 	httpListener net.Listener
 	reloadChan   chan int
