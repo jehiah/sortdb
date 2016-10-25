@@ -92,7 +92,7 @@ func (s *httpServer) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		httpprof.Handler("threadcreate").ServeHTTP(w, req)
 
 	default:
-		log.Printf("ERROR: 404 %s", req.URL.Path)
+		log.Printf("ERROR: 404 %q", req.URL.Path)
 		http.NotFound(w, req)
 	}
 }
