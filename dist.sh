@@ -6,10 +6,6 @@ set -e
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 echo "working dir $DIR"
 
-rm -rf $DIR/vendor
-echo "... refreshing vendor directory"
-./vendor.sh
-
 echo "... running tests"
 ./test.sh || exit 1
 
@@ -21,9 +17,9 @@ for os in linux darwin; do
     echo "... building v$version for $os/$arch"
     BUILD=$(mktemp -d -t sortdb)
     TARGET="sortdb-$version.$os-$arch.$goversion"
-    GOOS=$os GOARCH=$arch CGO_ENABLED=0 gb build
     mkdir -p $BUILD/$TARGET
-    cp bin/sortdb-$os-$arch $BUILD/$TARGET/sortdb
+    GOOS=$os GOARCH=$arch CGO_ENABLED=0 go build -o $BUILD/$TARGET/sortdb ./src/cmd/sortdb 
+
     pushd $BUILD >/dev/null
     tar czvf $TARGET.tar.gz $TARGET
     if [ -e $DIR/dist/$TARGET.tar.gz ]; then

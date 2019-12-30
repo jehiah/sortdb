@@ -3,7 +3,10 @@ sortdb
 
 Sortdb makes a sorted tab (tsv) or comma (csv) delimitated file accessible via HTTP using mmap.
 
-[![Build Status](https://secure.travis-ci.org/jehiah/sortdb.svg?branch=master)](http://travis-ci.org/jehiah/sortdb)
+[![Build Status](https://secure.travis-ci.org/jehiah/sortdb.png?branch=master)](http://travis-ci.org/jehiah/sortdb) [![GitHub release](https://img.shields.io/github/release/jehiah/sortdb.svg)](https://github.com/jehiah/sortdb/releases/latest)
+
+There is also an exported `sorteddb` Go package [![GoDoc](https://godoc.org/github.com/jehiah/sortdb?status.svg)](https://godoc.org/github.com/jehiah/sortdb)
+
 
 ### Installing
 
@@ -93,12 +96,6 @@ LC_COLLATE=C sort data.csv > sorted_data.csv
 ```
 
 Note: The locale specified by the environment affects sort order. Set `LC_ALL=C` or `LC_COLLATE=C` to get the traditional sort order that uses native byte values.
-
-## Building From Source
-
-This project uses [gb](https://getgb.io/) the Go Build tool. 
-
-To load vendored dependencies and compile run `./vendor.sh && gb build`
 
 --
 

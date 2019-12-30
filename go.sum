@@ -1,0 +1,4 @@
+github.com/bitly/timer_metrics v1.0.0 h1:bbszVIl0vT5+/cdZx8L4KOQmM8mC/0y3EBICGSxyhCk=
+github.com/bitly/timer_metrics v1.0.0/go.mod h1:87z4/LSg3f++tMqZwZlsLwPuJu6xloyJ7Qm40NyEkLs=
+github.com/riobard/go-mmap v0.0.0-20140328143229-8eec19e37d25 h1:Rb06WxXfgY6X3o+ZtKZgPuWj4coBSxigoyrIuTTWcZU=
+github.com/riobard/go-mmap v0.0.0-20140328143229-8eec19e37d25/go.mod h1:xLRlTPWkWK3LR5zqAksuYPVEXjKtAhWLtF9FJj1QwpQ=
