@@ -10,8 +10,8 @@ import (
 	"runtime"
 	"syscall"
 
-	"lib/sorteddb"
-	"lib/util"
+	"github.com/jehiah/sortdb/src/lib/sorteddb"
+	"github.com/jehiah/sortdb/src/lib/util"
 )
 
 func main() {

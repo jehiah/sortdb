@@ -5,8 +5,8 @@ import (
 	"net"
 	"os"
 
-	"lib/sorteddb"
-	"lib/util"
+	"github.com/jehiah/sortdb/src/lib/sorteddb"
+	"github.com/jehiah/sortdb/src/lib/util"
 )
 
 type Context struct {
