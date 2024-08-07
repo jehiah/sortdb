@@ -63,7 +63,7 @@ func (h loggingHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	url := *req.URL
 	h.handler.ServeHTTP(logger, req)
 	logLine := buildLogLine(req, url, t, logger.Status(), logger.Size())
-	h.writer.Write(logLine)
+	h.writer.Write(logLine) // nolint:errcheck
 }
 
 // Log entry for req similar to Apache Common Log Format.
@@ -83,7 +83,7 @@ func buildLogLine(req *http.Request, url url.URL, ts time.Time, status int, size
 		host = req.RemoteAddr
 	}
 
-	duration := float64(time.Now().Sub(ts)) / float64(time.Second)
+	duration := time.Since(ts).Seconds()
 
 	logLine := fmt.Sprintf("%s - %s [%s] %s %q %s %d %d %q %0.3f\n",
 		host,

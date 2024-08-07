@@ -99,7 +99,7 @@ func (s *httpServer) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 func (s *httpServer) pingHandler(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-Length", "2")
-	io.WriteString(w, "OK")
+	io.WriteString(w, "OK") // nolint:errcheck
 }
 
 func (s *httpServer) getHandler(w http.ResponseWriter, req *http.Request) {
@@ -124,14 +124,18 @@ func (s *httpServer) getHandler(w http.ResponseWriter, req *http.Request) {
 		atomic.AddUint64(&s.GetHits, 1)
 		w.Header().Set("Content-Type", "text/plain")
 		w.Header().Set("Content-Length", strconv.Itoa(len(line)+1))
-		w.Write(line)
-		w.Write([]byte{s.ctx.db.LineEnding})
+		w.Write(line)                        // nolint:errcheck
+		w.Write([]byte{s.ctx.db.LineEnding}) // nolint:errcheck
 	}
 	s.GetMetrics.Status(startTime)
 }
 
 func (s *httpServer) mgetHandler(w http.ResponseWriter, req *http.Request) {
-	req.ParseForm()
+	err := req.ParseForm()
+	if err != nil {
+		http.Error(w, "BAD_REQUEST", 400)
+		return
+	}
 	if len(req.Form["key"]) == 0 {
 		http.Error(w, "MISSING_ARG_KEY", 400)
 		return
@@ -147,8 +151,8 @@ func (s *httpServer) mgetHandler(w http.ResponseWriter, req *http.Request) {
 		line := s.ctx.db.Search(needle)
 		if len(line) != 0 {
 			numFound += 1
-			w.Write(line)
-			w.Write([]byte{s.ctx.db.LineEnding})
+			w.Write(line)                        // nolint:errcheck
+			w.Write([]byte{s.ctx.db.LineEnding}) // nolint:errcheck
 		}
 	}
 	if numFound == 0 {
@@ -180,7 +184,7 @@ func (s *httpServer) fwmatchHandler(w http.ResponseWriter, req *http.Request) {
 		atomic.AddUint64(&s.FwMatchHits, 1)
 		w.Header().Set("Content-Type", "text/plain")
 		w.Header().Set("Content-Length", strconv.Itoa(len(content)))
-		w.Write(content)
+		w.Write(content) // nolint:errcheck
 	}
 	s.FwMatchMetrics.Status(startTime)
 }
@@ -215,7 +219,7 @@ func (s *httpServer) rangeHandler(w http.ResponseWriter, req *http.Request) {
 		atomic.AddUint64(&s.RangeHits, 1)
 		w.Header().Set("Content-Type", "text/plain")
 		w.Header().Set("Content-Length", strconv.Itoa(len(content)))
-		w.Write(content)
+		w.Write(content) // nolint:errcheck
 	}
 	s.RangeMetrics.Status(startTime)
 }
@@ -223,7 +227,7 @@ func (s *httpServer) rangeHandler(w http.ResponseWriter, req *http.Request) {
 func (s *httpServer) reloadHandler(w http.ResponseWriter, req *http.Request) {
 	s.ctx.reloadChan <- 1
 	w.Header().Set("Content-Length", "2")
-	io.WriteString(w, "OK")
+	io.WriteString(w, "OK") // nolint:errcheck
 }
 
 type statsResponse struct {
@@ -305,6 +309,6 @@ func (s *httpServer) statsHandler(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.Header().Set("Content-Length", strconv.Itoa(len(response)))
 	w.WriteHeader(200)
-	w.Write(response)
+	w.Write(response) // nolint:errcheck
 
 }
