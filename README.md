@@ -3,9 +3,11 @@ sortdb
 
 Sortdb makes a sorted tab (tsv) or comma (csv) delimitated file accessible via HTTP using mmap.
 
-[![Build Status](https://secure.travis-ci.org/jehiah/sortdb.png?branch=master)](http://travis-ci.org/jehiah/sortdb) [![GitHub release](https://img.shields.io/github/release/jehiah/sortdb.svg)](https://github.com/jehiah/sortdb/releases/latest)
+![Build Status](https://github.com/jehiah/sortdb/actions/workflows/ci.yaml/badge.svg?branch=master)
+[![GitHub release](https://img.shields.io/github/release/jehiah/sortdb.svg)](https://github.com/jehiah/sortdb/releases/latest)
 
-There is also an exported `sorteddb` Go package [![GoDoc](https://godoc.org/github.com/jehiah/sortdb?status.svg)](https://godoc.org/github.com/jehiah/sortdb)
+
+There is also an exported `sorteddb` Go package [![Docs](https://pkg.go.dev/badge/github.com/jehiah/sortdb.svg)](http://pkg.go.dev/github.com/jehiah/sortdb)
 
 
 ### Installing
